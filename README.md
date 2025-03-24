@@ -22,7 +22,7 @@ uv sync
 ```bash
 git clone git@github.com:Shawn-Guo-CN/BFCL_server.git
 cd BFCL_server
-uv sync --dev
+uv sync --extra "dev"
 ```
 
 ## Usage
