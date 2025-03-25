@@ -6,6 +6,6 @@ from pydantic import BaseModel, Field
 
 
 class BaseResponse(BaseModel):
-    valid: bool = Field(default=False, description="Whether all tool call formats are valid")
+    valid: bool = Field(default=False, description="Whether all tool calls are valid")
     correct: bool = Field(default=False, description="Whether the result is correct if applicable")
     result: List[Any] = Field(default_factory=list, description="Results of the tool calls")
