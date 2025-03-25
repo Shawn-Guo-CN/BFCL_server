@@ -25,5 +25,23 @@ cd BFCL_server
 uv sync --extra "dev"
 ```
 
-## Usage
+## Quick Start
+
+### Start the server
+
+```bash
+uv run bfcl
+```
+
+## Design
+
+### Architecture
+
+We hereby describe the high-level architecture of the project. The main modules are:
+
+- `constants`: contains the constants for running the tool calls.
+- `data`: stores the original test prompts and possible answers from [Berkeley Function Calling Leaderboard](https://gorilla.cs.berkeley.edu/leaderboard.html).
+- `eval`: implements the tool-call runners for each category, including `Irrelevance`, `Executable`, and etc.
+- `utils`: contains the utility functions for running the tool calls.
+- `main.py`: the main entry of the server, which wraps the tool-call runners as `asgi` apps and parallelise them.
 
