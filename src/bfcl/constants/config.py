@@ -5,6 +5,7 @@ Reference: https://github.com/ShishirPatil/gorilla/blob/main/berkeley-function-c
 
 from pathlib import Path
 
+PORT = 1123
 VLLM_PORT = 1053
 
 REAL_TIME_MATCH_ALLOWED_DIFFERENCE = 0.2
@@ -13,22 +14,22 @@ REAL_TIME_MATCH_ALLOWED_DIFFERENCE = 0.2
 PROJECT_ROOT = "../../"
 
 # NOTE: These paths are relative to the PROJECT_ROOT directory.
-RESULT_PATH = "./result/"
-PROMPT_PATH = "./data/"
-MULTI_TURN_FUNC_DOC_PATH = "./data/multi_turn_func_doc/"
-POSSIBLE_ANSWER_PATH = "./data/possible_answer/"
-SCORE_PATH = "./score/"
-DOTENV_PATH = "./.env"
-UTILS_PATH = "./utils/"
-TEST_IDS_TO_GENERATE_PATH = "./test_case_ids_to_generate.json"
+RESULT_PATH = f"{PROJECT_ROOT}/result/"
+PROMPT_PATH = f"{PROJECT_ROOT}/data/"
+MULTI_TURN_FUNC_DOC_PATH = f"{PROJECT_ROOT}/data/multi_turn_func_doc/"
+POSSIBLE_ANSWER_PATH = f"{PROJECT_ROOT}/data/possible_answer/"
+SCORE_PATH = f"{PROJECT_ROOT}/score/"
+DOTENV_PATH = f"{PROJECT_ROOT}/.env"
+UTILS_PATH = f"{PROJECT_ROOT}/utils/"
+TEST_IDS_TO_GENERATE_PATH = f"{PROJECT_ROOT}/test_case_ids_to_generate.json"
 # These two files are for the API status sanity check
-REST_API_GROUND_TRUTH_FILE_PATH = "./bfcl/eval_checker/executable_eval/data/api_status_check_ground_truth_REST.json"
+REST_API_GROUND_TRUTH_FILE_PATH = f"{PROJECT_ROOT}/bfcl/eval/exec/data/api_status_check_ground_truth_REST.json"
 EXECTUABLE_API_GROUND_TRUTH_FILE_PATH = (
-    "./bfcl/eval_checker/executable_eval/data/api_status_check_ground_truth_executable.json"
+    f"{PROJECT_ROOT}/bfcl/eval/exec/data/api_status_check_ground_truth_executable.json"
 )
 
 # This is the ground truth file for the `rest` test category
-REST_EVAL_GROUND_TRUTH_PATH = "./bfcl/eval_checker/executable_eval/data/rest-eval-response_v5.jsonl"
+REST_EVAL_GROUND_TRUTH_PATH = f"{PROJECT_ROOT}/bfcl/eval/exec/data/rest-eval-response_v5.jsonl"
 
 
 UNDERSCORE_TO_DOT = [

@@ -30,8 +30,28 @@ uv sync --extra "dev"
 ### Start the server
 
 ```bash
-uv run bfcl
+uv run bfcl --host 0.0.0.0 --port 1123
 ```
+
+### Run a tool call
+
+An example of running a tool call is as follows:
+
+```bash
+import requests
+
+test_call = {
+    "id": "irrelevance_5",
+    "completion": "I don't have the correct tool to answer the question."
+}
+}
+
+response = requests.get("http://127.0.0.1:1123/run", json=test_call)
+print('Response:', response.json())
+print('valid:', response.json()['valid'])
+print('correct:', response.json()['correct'])
+```
+
 
 ## Design
 
@@ -45,3 +65,6 @@ We hereby describe the high-level architecture of the project. The main modules 
 - `utils`: contains the utility functions for running the tool calls.
 - `main.py`: the main entry of the server, which wraps the tool-call runners as `asgi` apps and parallelise them.
 
+## Features to be added
+
+- [ ] Checker for the `Multi-Turn` category.
