@@ -1,3 +1,8 @@
+"""Checkers for the AST category.
+
+Reference: https://github.com/ShishirPatil/gorilla/blob/main/berkeley-function-call-leaderboard/bfcl/eval_checker/ast_eval/ast_checker.py
+"""
+
 import re
 
 from bfcl.constants.config import UNDERSCORE_TO_DOT
