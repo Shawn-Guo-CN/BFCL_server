@@ -44,7 +44,6 @@ test_call = {
     "id": "irrelevance_5",
     "completion": "I don't have the correct tool to answer the question."
 }
-}
 
 response = requests.get("http://127.0.0.1:1123/run", json=test_call)
 print('Response:', response.json())

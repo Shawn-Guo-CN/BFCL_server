@@ -1,7 +1,9 @@
+import argparse
 import logging
 import os
 from datetime import datetime
 
+import uvicorn
 from asgiref.wsgi import WsgiToAsgi
 from flask import Flask, jsonify, request
 
@@ -33,12 +35,20 @@ def setup_logging(log_dir: str = "./logs"):
     )
 
 
-def log_server_info(host, port):
+def init_logging(host, port):
     setup_logging()
     logger.info(f"Server starting on http://{host}:{port}")
     logger.info(f"Starting the simulator server at {datetime.now()}")
 
 
-def create_asgi_app(host="127.0.0.1", port=1123):
-    log_server_info(host, port)
-    return WsgiToAsgi(app)
+def main():
+    parser = argparse.ArgumentParser(description="BFCL Server")
+    parser.add_argument("--host", default="127.0.0.1", help="Host to listen on")
+    parser.add_argument("--port", type=int, default=1123, help="Port to listen on")
+    args = parser.parse_args()
+    init_logging(args.host, args.port)
+    uvicorn.run(WsgiToAsgi(app), host=args.host, port=args.port)
+
+
+if __name__ == "__main__":
+    main()
