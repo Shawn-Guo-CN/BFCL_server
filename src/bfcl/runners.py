@@ -162,9 +162,7 @@ class BaseRunner(ABC):
         eval_runner.py#L309` for the reference.
         """
         response = BaseResponse()
-        valid = tool_calls is not None
-        response.valid = valid
-        response.correct = valid
+        response.correct = tool_calls is not None
         return response
 
     def run_irrelevance_calls(self, tool_calls: List[Dict[str, Any]] | None, category: TestCategory) -> BaseResponse:
@@ -177,9 +175,7 @@ class BaseRunner(ABC):
             A `BaseResponse` object
         """
         response = BaseResponse()
-        valid = tool_calls is None or len(tool_calls) == 0
-        response.valid = valid
-        response.correct = valid
+        response.correct = tool_calls is None or len(tool_calls) == 0
         return response
 
     def run_executable_calls(self, tool_calls: List[Dict[str, Any]] | None, category: TestCategory) -> BaseResponse:
@@ -208,7 +204,6 @@ class BaseRunner(ABC):
 
         # TODO: check the correctness of the results
         if all(item.get("valid") for item in result_list):
-            response.valid = True
             response.correct = True
             response.result = [d["result"] for d in result_list]
 
@@ -245,7 +240,6 @@ class BaseRunner(ABC):
             )
 
             if check_result["valid"]:
-                response.valid = True
                 response.correct = True
                 response.result = []
         except Exception as e:
@@ -267,17 +261,24 @@ class BaseRunner(ABC):
                 - correct (bool, optional): True if the tool call was correct, False otherwise
                 - result (list, optional): List of results from each call.
         """
-        if not self.validate_raw_completion(completion):
-            return self._null_response.model_dump()
+        response = BaseResponse()
+        response.valid = self.validate_raw_completion(completion)
+        if not response.valid:
+            return response.model_dump()
 
         category = self.id_mapper.get_category(id)
         if category is None:
-            return self._null_response.model_dump()
+            response.errors[0].message = [f"Category for id {id} is not found."]
+            return response.model_dump()
 
         tool_calls = self.decode_tool_calls(completion)  # NOTE: None tool call is valid and correct for IRRELEVANCE
-
         handler = self.category_handlers.get(category)
-        return handler(tool_calls, category).model_dump()
+        runner_response = handler(tool_calls, category)
+
+        response.correct = runner_response.correct
+        response.results = runner_response.results
+        response.errors = runner_response.errors
+        return response.model_dump()
 
     def get_category(self, id: str) -> str:
         """Get the category for a given id.
@@ -303,24 +304,15 @@ class PlainJsonRunner(BaseRunner):
         super().__init__()
 
     def validate_raw_completion(self, completion: str) -> bool:
-        """Validate the raw completion from the model.
+        return True
 
-        Args:
-            completion (str): The completion to validate.
-        """
-        try:
-            json.loads(completion)
-            return True
-        except:
-            return False
-
-    def decode_tool_calls(self, raw_completion: str) -> List[Dict[str, Any]]:
+    def decode_tool_calls(self, completion: str) -> List[Dict[str, Any]]:
         """Decode the raw completion into a tool call.
 
         Args:
             raw_completion (str): The raw completion to decode.
         """
         try:
-            return json.loads(raw_completion)
+            return json.loads(completion)
         except:
             return []

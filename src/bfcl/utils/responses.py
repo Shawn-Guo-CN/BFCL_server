@@ -15,8 +15,13 @@ class WrongFunctionCountError(BaseError):
     error_type: str = "simple_function_checker:wrong_count"
 
 
+class NullCategoryError(BaseError):
+    message: List[str] = ["Category is not found."]
+    error_type: str = "runner:null_category"
+
+
 class BaseResponse(BaseModel):
-    valid: bool = Field(default=False, description="Whether all tool calls are valid")
+    valid: bool = Field(default=False, description="Whether all tool calls are of the correct format")
     correct: bool = Field(default=False, description="Whether the result is correct if applicable")
     results: List[Any] | None = Field(default=None, description="Results of the tool calls")
     errors: List[BaseError] | None = Field(default=None, description="Errors of the tool calls")
