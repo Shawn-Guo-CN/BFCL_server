@@ -122,10 +122,6 @@ class BaseRunner(ABC):
     def validate_raw_completion(self, completion: str) -> bool:
         """Validate the raw completion from the model.
 
-        NOTE: the completion should contain at least one of the followings
-              - a response in plain text wrapped by "<|START_RESPONSE|>" and "<|END_RESPONSE|>"
-              - a list of tool call in JSON format wrapped by "<|START_ACTION|>" and "<|END_ACTION|>"
-
         Args:
             completion (str): The completion to validate.
 
@@ -135,7 +131,7 @@ class BaseRunner(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def decode_tool_calls(self, raw_completion: str) -> List[Dict[str, Any]]:
+    def decode_tool_calls(self, completion: str) -> List[Dict[str, Any]] | None:
         """Decode model completion into a tool call.
 
         Args:
@@ -145,6 +141,7 @@ class BaseRunner(ABC):
             A list of dictionaries with the following keys:
                 - tool_name (str): The name of the tool to call.
                 - parameters (str): The parameters to pass to the tool.
+            or None if the completion cannot be decoded.
         """
         raise NotImplementedError
 
@@ -271,13 +268,13 @@ class BaseRunner(ABC):
             response.errors[0].message = [f"Category for id {id} is not found."]
             return response.model_dump()
 
-        tool_calls = self.decode_tool_calls(completion)  # NOTE: None tool call is valid and correct for IRRELEVANCE
+        tool_calls = self.decode_tool_calls(completion)
         handler = self.category_handlers.get(category)
-        runner_response = handler(tool_calls, category)
+        category_response = handler(tool_calls, category)
 
-        response.correct = runner_response.correct
-        response.results = runner_response.results
-        response.errors = runner_response.errors
+        response.correct = category_response.correct
+        response.results = category_response.results
+        response.errors = category_response.errors
         return response.model_dump()
 
     def get_category(self, id: str) -> str:
@@ -306,13 +303,16 @@ class PlainJsonRunner(BaseRunner):
     def validate_raw_completion(self, completion: str) -> bool:
         return True
 
-    def decode_tool_calls(self, completion: str) -> List[Dict[str, Any]]:
+    def decode_tool_calls(self, completion: str) -> List[Dict[str, Any]] | None:
         """Decode the raw completion into a tool call.
 
         Args:
-            raw_completion (str): The raw completion to decode.
+            completion (str): The raw completion to decode.
+
+        Returns:
+            A list of tool calls or None if the completion cannot be decoded.
         """
         try:
             return json.loads(completion)
         except:
-            return []
+            return None  # None for empty tool calls
