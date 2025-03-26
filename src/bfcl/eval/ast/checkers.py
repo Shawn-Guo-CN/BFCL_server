@@ -4,10 +4,13 @@ Reference: https://github.com/ShishirPatil/gorilla/blob/main/berkeley-function-c
 """
 
 import re
+from typing import Any, Dict, List
 
 from bfcl.constants.config import UNDERSCORE_TO_DOT
 from bfcl.constants.type_mappings import JAVA_TYPE_CONVERSION, JS_TYPE_CONVERSION
 from bfcl.eval.ast.utils import java_type_converter, js_type_converter
+from bfcl.schemas.responses import BaseResponse
+from bfcl.schemas.tool_calls import ToolCalls
 
 #### Constants ####
 PYTHON_TYPE_MAPPING = {
@@ -23,28 +26,32 @@ PYTHON_TYPE_MAPPING = {
 
 # This is the list of types that we need to recursively check its values
 PYTHON_NESTED_TYPE_CHECK_LIST = ["array", "tuple"]
-
-
 NESTED_CONVERSION_TYPE_LIST = ["Array", "ArrayList", "array"]
 
 
 #### Main function ####
-def ast_checker(func_description, model_output, possible_answer, language, test_category, model_name):
-    if "parallel" in test_category:
-        return parallel_function_checker_no_order(func_description, model_output, possible_answer, language, model_name)
+def ast_checker(
+    func_description: List[Dict[str, Any]],
+    tool_calls: ToolCalls,
+    possible_answer: ToolCalls,
+    language: str,
+    category_name: str,
+) -> BaseResponse:
+    if "parallel" in category_name:
+        return parallel_function_checker_no_order(func_description, tool_calls, possible_answer, language)
 
-    elif "multiple" in test_category:
-        return multiple_function_checker(func_description, model_output, possible_answer, language, model_name)
+    elif "multiple" in category_name:
+        return multiple_function_checker(func_description, tool_calls, possible_answer, language)
 
     else:
-        if len(model_output) != 1:
+        if len(tool_calls) != 1:
             return {
                 "valid": False,
                 "error": ["Wrong number of functions."],
                 "error_type": "simple_function_checker:wrong_count",
             }
 
-        return simple_function_checker(func_description[0], model_output[0], possible_answer[0], language, model_name)
+        return simple_function_checker(func_description[0], tool_calls[0], possible_answer[0], language)
 
 
 #### Helper functions for AST ####

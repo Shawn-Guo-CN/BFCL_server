@@ -4,7 +4,7 @@ import time
 
 import requests
 
-from bfcl.utils.exceptions import NoAPIKeyError
+from bfcl.schemas.exceptions import NoAPIKeyError
 
 # Make sure the env variables are populated
 ENV_VARS = ("GEOCODE_API_KEY", "RAPID_API_KEY", "OMDB_API_KEY", "EXCHANGERATE_API_KEY")

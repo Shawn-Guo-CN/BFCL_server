@@ -9,7 +9,7 @@ import json
 import os
 
 from bfcl.constants.config import PROMPT_PATH
-from bfcl.utils.exceptions import NoAPIKeyError
+from bfcl.schemas.exceptions import NoAPIKeyError
 
 ENV_VARS = ("GEOCODE_API_KEY", "RAPID_API_KEY", "OMDB_API_KEY", "EXCHANGERATE_API_KEY")
 PLACEHOLDERS = {}

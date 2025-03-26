@@ -10,7 +10,7 @@ from functools import lru_cache
 import requests  # Do not remove this import even though it seems to be unused. It's used in the executable_checker_rest function.
 
 from bfcl.constants.config import REAL_TIME_MATCH_ALLOWED_DIFFERENCE, REST_EVAL_GROUND_TRUTH_PATH
-from bfcl.utils.exceptions import NoAPIKeyError
+from bfcl.schemas.exceptions import NoAPIKeyError
 
 
 # Load the ground truth data for the `rest` test category

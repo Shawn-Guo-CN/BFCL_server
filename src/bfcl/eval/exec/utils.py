@@ -12,8 +12,8 @@ from bfcl.constants.config import (
     RESET,
     REST_API_GROUND_TRUTH_FILE_PATH,
 )
+from bfcl.schemas.exceptions import BadAPIStatusError
 from bfcl.utils._apply_function_credential_config import apply_function_credential_config
-from bfcl.utils.exceptions import BadAPIStatusError
 from bfcl.utils.ops import load_file, write_list_of_dicts_to_file
 
 

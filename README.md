@@ -66,4 +66,7 @@ We hereby describe the high-level architecture of the project. The main modules 
 
 ## Features to be added
 
-- [ ] Checker for the `Multi-Turn` category.
+- [ ] Runner for the `AST` category.
+- [ ] Runner for the `Executable` category.
+- [ ] Support for installing as a dependency.
+- [ ] Runner for the `Multi-Turn` category.
