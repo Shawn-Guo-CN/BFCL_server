@@ -41,11 +41,13 @@ class IDMapper:
     def get_ground_truth(self, id: str) -> str:
         """Get the ground truth of the given ID."""
         if id not in self.id_to_ground_truth:
+            logger.error(f"No ground truth found for the given ID: {id}")
             raise ValueError(f"No ground truth found for the given ID: {id}")
         return self.id_to_ground_truth[id]
 
     def get_function_description(self, id: str) -> str:
         """Get the function description of the given ID."""
         if id not in self.id_to_function_description:
+            logger.error(f"No function description found for the given ID: {id}")
             raise ValueError(f"No function description found for the given ID: {id}")
         return self.id_to_function_description[id]
