@@ -11,8 +11,8 @@ class BaseError(BaseModel):
 
 
 class WrongFunctionCountError(BaseError):
-    message = ["Wrong number of functions."]
-    error_type = "simple_function_checker:wrong_count"
+    message: List[str] = ["Wrong number of functions."]
+    error_type: str = "simple_function_checker:wrong_count"
 
 
 class BaseResponse(BaseModel):

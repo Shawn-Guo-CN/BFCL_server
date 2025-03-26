@@ -42,6 +42,3 @@ def log_server_info(host, port):
 def create_asgi_app(host="127.0.0.1", port=1123):
     log_server_info(host, port)
     return WsgiToAsgi(app)
-
-
-asgi_app = create_asgi_app()

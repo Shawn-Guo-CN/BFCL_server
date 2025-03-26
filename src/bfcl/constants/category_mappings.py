@@ -192,7 +192,7 @@ class TestCategory(Enum):
     """
 
     # relevance and irrelevance
-    LIVE_RELEVENCE = (1, "live_relevence", f"{VERSION_PREFIX}_live_relevence.json", False)
+    LIVE_RELEVENCE = (1, "live_relevence", f"{VERSION_PREFIX}_live_relevance.json", False)
     IRRELEVANCE = (2, "irrelevance", f"{VERSION_PREFIX}_irrelevance.json", False)
     LIVE_IRRELEVANCE = (3, "live_irrelevance", f"{VERSION_PREFIX}_live_irrelevance.json", False)
     # ast

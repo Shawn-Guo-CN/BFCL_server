@@ -28,7 +28,7 @@ class IDMapper:
                     for line in f:
                         data = json.loads(line.strip())
                         self.id_to_ground_truth[data["id"]] = data["ground_truth"]
-            if category in TestCollection.AST:
+            if category in TestCollection.AST.value[2]:
                 with open(Path(PROMPT_PATH) / category.value[2], "r") as f:
                     for line in f:
                         data = json.loads(line.strip())

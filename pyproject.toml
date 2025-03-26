@@ -20,7 +20,7 @@ dependencies = [
 ]
 
 [project.scripts]
-bfcl = "bfcl:main"
+bfcl = "bfcl.main:create_asgi_app"
 
 [build-system]
 requires = ["hatchling"]
