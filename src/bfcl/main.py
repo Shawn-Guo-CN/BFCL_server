@@ -17,9 +17,9 @@ runner = PlainJsonRunner()
 def execute():
     logging.info(f"Received the following request to execute: {request.json}")
     engine_input = request.json
-    result = runner.run(engine_input["prompt"], engine_input["completion"])
-    logging.info(f"Returning the following result: {result}")
-    return jsonify(result)
+    response = runner.run(engine_input["id"], engine_input["completion"])
+    logging.info(f"Returning the following result: {response}")
+    return jsonify(response)
 
 
 def setup_logging(log_dir: str = "./logs"):
