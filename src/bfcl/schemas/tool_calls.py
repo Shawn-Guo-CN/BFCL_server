@@ -18,7 +18,7 @@ class ToolCall(BaseModel):
     def from_ground_truth(cls, ground_truth: Dict[str, Any]) -> List["ToolCall"]:
         """Convert the ground truth to a list of tool calls."""
         assert len(ground_truth) == 1, "Only one tool call is supported for now."
-        return cls(function_name=ground_truth.keys()[0], parameters=ground_truth.values()[0])
+        return cls(function_name=list(ground_truth.keys())[0], parameters=list(ground_truth.values())[0])
 
 
 class ToolCallList(BaseModel):

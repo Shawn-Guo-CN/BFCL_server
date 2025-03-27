@@ -7,7 +7,7 @@ from typing import Any, Dict, List
 
 from bfcl.constants.category_mappings import TestCategory, TestCollection
 from bfcl.constants.config import POSSIBLE_ANSWER_PATH, PROMPT_PATH
-from bfcl.utils.tool_calls import ToolCalls
+from bfcl.schemas.tool_calls import ToolCallList
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ class IDMapper:
                 with open(Path(POSSIBLE_ANSWER_PATH) / category.value[2], "r") as f:
                     for line in f:
                         data = json.loads(line.strip())
-                        self.id_to_ground_truth[data["id"]] = ToolCalls.from_ground_truth(data["ground_truth"])
+                        self.id_to_ground_truth[data["id"]] = ToolCallList.from_ground_truth(data["ground_truth"])
             if category in TestCollection.AST.value[2]:
                 with open(Path(PROMPT_PATH) / category.value[2], "r") as f:
                     for line in f:
@@ -40,7 +40,7 @@ class IDMapper:
         """Get the category of the given ID."""
         return self.id_to_category[id]
 
-    def get_ground_truth(self, id: str) -> ToolCalls:
+    def get_ground_truth(self, id: str) -> ToolCallList:
         """Get the ground truth of the given ID."""
         if id not in self.id_to_ground_truth:
             logger.error(f"No ground truth found for the given ID: {id}")
