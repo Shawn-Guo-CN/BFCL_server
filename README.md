@@ -22,7 +22,10 @@ uv sync
 ```bash
 git clone git@github.com:Shawn-Guo-CN/BFCL_server.git
 cd BFCL_server
+# Install development dependencies
 uv sync --extra "dev"
+# Install pre-commit hooks
+pre-commit install --hook-type pre-commit --hook-type pre-push
 ```
 
 ## Quick Start
