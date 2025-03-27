@@ -9,8 +9,15 @@ from typing import Any, Dict, List
 from bfcl.constants.config import UNDERSCORE_TO_DOT
 from bfcl.constants.type_mappings import JAVA_TYPE_CONVERSION, JS_TYPE_CONVERSION
 from bfcl.eval.ast.utils import java_type_converter, js_type_converter
-from bfcl.schemas.responses import BaseResponse
-from bfcl.schemas.tool_calls import ToolCalls
+from bfcl.schemas.responses import (
+    BaseResponse,
+    IncorrectTypeForParameterError,
+    MissingRequiredParameterError,
+    UnexpectedParameterError,
+    WrongFunctionCountError,
+    WrongFunctionNameError,
+)
+from bfcl.schemas.tool_calls import ToolCall, ToolCallList
 
 #### Constants ####
 PYTHON_TYPE_MAPPING = {
@@ -32,25 +39,18 @@ NESTED_CONVERSION_TYPE_LIST = ["Array", "ArrayList", "array"]
 #### Main function ####
 def ast_checker(
     func_description: List[Dict[str, Any]],
-    tool_calls: ToolCalls,
-    possible_answer: ToolCalls,
+    tool_calls: ToolCallList,
+    possible_answer: ToolCallList,
     language: str,
     category_name: str,
 ) -> BaseResponse:
     if "parallel" in category_name:
         return parallel_function_checker_no_order(func_description, tool_calls, possible_answer, language)
-
     elif "multiple" in category_name:
         return multiple_function_checker(func_description, tool_calls, possible_answer, language)
-
     else:
         if len(tool_calls) != 1:
-            return {
-                "valid": False,
-                "error": ["Wrong number of functions."],
-                "error_type": "simple_function_checker:wrong_count",
-            }
-
+            return BaseResponse(correct=False, errors=[WrongFunctionCountError()])
         return simple_function_checker(func_description[0], tool_calls[0], possible_answer[0], language)
 
 
@@ -317,12 +317,11 @@ def list_dict_checker(param: str, model_output: list, possible_answers: list):
 
 
 def simple_function_checker(
-    func_description: dict,
-    model_output: dict,
-    possible_answer: dict,
+    func_description: Dict[str, Any],
+    model_output: ToolCall,
+    possible_answer: ToolCall,
     language: str,
-    model_name: str,
-):
+) -> BaseResponse:
     possible_answer = list(possible_answer.values())[0]
     # Extract function name and parameters details
     func_name = func_description["name"]
@@ -330,37 +329,28 @@ def simple_function_checker(
     required_params = func_description["parameters"]["required"]
 
     # Initialize a result dictionary
-    result = {
-        "valid": True,
-        "error": [],
-        "error_type": "simple_function_checker:unclear",
-    }
-
-    func_name = convert_func_name(func_name, model_name)
+    result = BaseResponse()
 
     # Check if function name matches
-    if func_name not in model_output:
-        result["valid"] = False
-        result["error"].append(f"Function name {repr(func_name)} not found in model output.")
-        result["error_type"] = "simple_function_checker:wrong_func_name"
+    if model_output.function_name not in func_name:
+        result.valid = False  # TODO: leave it here for clarity at the beginning, shall be removed later
+        result.errors = [WrongFunctionNameError(message=f"Function name {repr(func_name)} not found in model output.")]
         return result
 
-    model_params = model_output[func_name]
+    model_params = model_output.parameters.keys()
 
     # Check for required parameters in model output
     for param in required_params:
         if param not in model_params:
-            result["valid"] = False
-            result["error"].append(f"Missing required parameter: {repr(param)}.")
-            result["error_type"] = "simple_function_checker:missing_required"
+            result.valid = False
+            result.errors = [MissingRequiredParameterError(message=f"Missing required parameter: {repr(param)}.")]
             return result
 
     # Validate types and values for each parameter in model output
-    for param, value in model_params.items():
+    for param in model_params:
         if param not in param_details or param not in possible_answer:
-            result["valid"] = False
-            result["error"].append(f"Unexpected parameter: {repr(param)}.")
-            result["error_type"] = "simple_function_checker:unexpected_param"
+            result.valid = False
+            result.errors = [UnexpectedParameterError(message=f"Unexpected parameter: {repr(param)}.")]
             return result
 
         full_param_details = param_details[param]
@@ -372,12 +362,17 @@ def simple_function_checker(
             expected_type_converted = JAVA_TYPE_CONVERSION[expected_type_description]
 
             if expected_type_description in JAVA_TYPE_CONVERSION:
-                if type(value) != str:
-                    result["valid"] = False
-                    result["error"].append(
-                        f"Incorrect type for parameter {repr(param)}. Expected type String, got {type(value).__name__}. Parameter value: {repr(value)}."
-                    )
-                    result["error_type"] = "type_error:java"
+                if not isinstance(value, str):
+                    result.valid = False
+                    result.errors = [
+                        IncorrectTypeForParameterError(
+                            message=(
+                                f"Incorrect type for parameter {repr(param)}. "
+                                f"Expected type String, got {type(value).__name__}. "
+                                f"Parameter value: {repr(value)}."
+                            )
+                        )
+                    ]
                     return result
 
                 if expected_type_description in NESTED_CONVERSION_TYPE_LIST:

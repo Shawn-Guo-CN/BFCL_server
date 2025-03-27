@@ -10,7 +10,7 @@ import bfcl.eval.ast.checkers as ast_checker
 import bfcl.eval.exec.executable_python_functions as exec_funcs
 from bfcl.constants.category_mappings import TestCategory
 from bfcl.constants.id_mapper import IDMapper
-from bfcl.utils.responses import BaseResponse
+from bfcl.schemas.responses import BaseResponse
 
 logger = logging.getLogger(__name__)
 
@@ -29,14 +29,14 @@ class BaseRunner(ABC):
             TestCategory.LIVE_IRRELEVANCE: self.run_irrelevance_calls,
             # TODO: implement the following call functions
             # ast
-            # TestCategory.SIMPLE: self.run_ast_calls,
-            # TestCategory.LIVE_SIMPLE: self.run_ast_calls,
-            # TestCategory.MULTIPLE: self.run_ast_calls,
-            # TestCategory.LIVE_MULTIPLE: self.run_ast_calls,
-            # TestCategory.PARALLEL: self.run_ast_calls,
-            # TestCategory.LIVE_PARALLEL: self.run_ast_calls,
-            # TestCategory.PARALLEL_MULTIPLE: self.run_ast_calls,
-            # TestCategory.LIVE_PARALLEL_MULTIPLE: self.run_ast_calls,
+            TestCategory.SIMPLE: self.run_ast_calls,
+            TestCategory.LIVE_SIMPLE: self.run_ast_calls,
+            TestCategory.MULTIPLE: self.run_ast_calls,
+            TestCategory.LIVE_MULTIPLE: self.run_ast_calls,
+            TestCategory.PARALLEL: self.run_ast_calls,
+            TestCategory.LIVE_PARALLEL: self.run_ast_calls,
+            TestCategory.PARALLEL_MULTIPLE: self.run_ast_calls,
+            TestCategory.LIVE_PARALLEL_MULTIPLE: self.run_ast_calls,
             # executable
             # TestCategory.EXEC_SIMPLE: self.run_executable_calls,
             # TestCategory.EXEC_PARALLEL: self.run_executable_calls,
@@ -119,7 +119,7 @@ class BaseRunner(ABC):
         return result
 
     @abstractmethod
-    def validate_raw_completion(self, completion: str) -> bool:
+    def validate_raw_completion_format(self, completion: str) -> bool:
         """Validate the raw completion from the model.
 
         Args:
@@ -259,8 +259,8 @@ class BaseRunner(ABC):
                 - result (list, optional): List of results from each call.
         """
         response = BaseResponse()
-        response.valid = self.validate_raw_completion(completion)
-        if not response.valid:
+        response.formatted = self.validate_raw_completion_format(completion)
+        if not response.formatted:
             return response.model_dump()
 
         category = self.id_mapper.get_category(id)
@@ -270,6 +270,10 @@ class BaseRunner(ABC):
 
         tool_calls = self.decode_tool_calls(completion)
         handler = self.category_handlers.get(category)
+        if handler is None:
+            response.errors[0].message = [f"Handler for category {category} is not supported yet."]
+            return response.model_dump()
+
         category_response = handler(tool_calls, category)
 
         response.correct = category_response.correct
@@ -300,7 +304,7 @@ class PlainJsonRunner(BaseRunner):
     def __init__(self):
         super().__init__()
 
-    def validate_raw_completion(self, completion: str) -> bool:
+    def validate_raw_completion_format(self, completion: str) -> bool:
         return True
 
     def decode_tool_calls(self, completion: str) -> List[Dict[str, Any]] | None:
