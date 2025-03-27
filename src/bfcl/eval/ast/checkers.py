@@ -11,6 +11,7 @@ from bfcl.constants.type_mappings import JAVA_TYPE_CONVERSION, JS_TYPE_CONVERSIO
 from bfcl.eval.ast.utils import java_type_converter, js_type_converter
 from bfcl.schemas.responses import (
     BaseResponse,
+    FunctionMismatchError,
     IncorrectTypeForParameterError,
     IncorrectValueError,
     MissingOptionalParameterError,
@@ -535,6 +536,10 @@ def simple_function_checker(
             ]
             return result
 
+    result.valid = True
+    result.errors = []
+    result.correct = True
+    result.results = None  # TODO: check if we should return the results here
     return result
 
 
@@ -543,14 +548,13 @@ def parallel_function_checker_enforce_order(
     model_output: list,
     possible_answers: dict,
     language: str,
-    model_name: str,
 ):
     if len(model_output) != len(possible_answers):
-        return {
-            "valid": False,
-            "error": ["Wrong number of functions."],
-            "error_type": "parallel_function_checker_enforce_order:wrong_count",
-        }
+        return BaseResponse(
+            valid=False,
+            errors=[WrongFunctionCountError(message="Wrong number of functions.")],
+            error_type="parallel_function_checker_enforce_order:wrong_count",
+        )
 
     func_name_list = list(possible_answers.keys())
     possible_answers_list = []
@@ -566,12 +570,16 @@ def parallel_function_checker_enforce_order(
             model_output[i],
             possible_answers_list[i],
             language,
-            model_name,
         )
-        if not result["valid"]:
+        if not result.valid:
             return result
 
-    return {"valid": True, "error": []}
+    return BaseResponse(
+        valid=True,
+        correct=True,
+        errors=[],
+        results=None,  # TODO: check if we should return the results here
+    )
 
 
 def parallel_function_checker_no_order(
@@ -582,11 +590,11 @@ def parallel_function_checker_no_order(
     model_name: str,
 ):
     if len(model_output) != len(possible_answers):
-        return {
-            "valid": False,
-            "error": ["Wrong number of functions."],
-            "error_type": "parallel_function_checker_no_order:wrong_count",
-        }
+        return BaseResponse(
+            valid=False,
+            errors=[WrongFunctionCountError(message="Wrong number of functions.")],
+            error_type="parallel_function_checker_no_order:wrong_count",
+        )
 
     matched_indices = []
 
@@ -608,37 +616,30 @@ def parallel_function_checker_no_order(
                 model_output[index],
                 possible_answers[i],
                 language,
-                model_name,
             )
 
-            if result["valid"]:
+            if result.valid:
                 matched_indices.append(index)
                 break
             else:
-                all_errors.append(
-                    {
-                        f"Model Result Index {index}": {
-                            "sub_error": result["error"],
-                            "sub_error_type": result["error_type"],
-                            "model_output_item": model_output[index],
-                            "possible_answer_item": possible_answers[i],
-                        }
-                    }
-                )
+                all_errors.extend(result.errors)
 
-        if not result["valid"]:
+        if not result.valid:
             considered_indices = [i for i in range(len(model_output)) if i not in matched_indices]
             all_errors.insert(
                 0,
-                f"Could not find a matching function among index {considered_indices} of model output for index {i} of possible answers.",
+                FunctionMismatchError(
+                    message=(
+                        f"Could not find a matching function among index {considered_indices} of model output "
+                        f"for index {i} of possible answers."
+                    ),
+                    error_type="parallel_function_checker_no_order:cannot_find_match",
+                ),
             )
-            return {
-                "valid": False,
-                "error": all_errors,
-                "error_type": "parallel_function_checker_no_order:cannot_find_match",
-            }
+            return BaseResponse(valid=False, correct=False, errors=all_errors, results=None)
 
-    return {"valid": True, "error": []}
+    # TODO: check if we should return the results below
+    return BaseResponse(valid=True, correct=True, errors=[], results=None)
 
 
 def multiple_function_checker(

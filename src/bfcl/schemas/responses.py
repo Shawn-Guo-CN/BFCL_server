@@ -10,6 +10,11 @@ class BaseError(BaseModel):
     error_type: str = Field(description="The type of the error")
 
 
+class FunctionMismatchError(BaseError):
+    message: List[str] = ["Function mismatch."]
+    error_type: str = "parallel_function_checker_no_order:cannot_find_match"
+
+
 class IncorrectValueError(BaseError):
     message: List[str] = ["Incorrect value."]
     error_type: str = "dict_checker:incorrect_value"
