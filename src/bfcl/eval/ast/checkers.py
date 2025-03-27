@@ -12,6 +12,8 @@ from bfcl.eval.ast.utils import java_type_converter, js_type_converter
 from bfcl.schemas.responses import (
     BaseResponse,
     IncorrectTypeForParameterError,
+    IncorrectValueError,
+    MissingOptionalParameterError,
     MissingRequiredParameterError,
     UnexpectedParameterError,
     WrongFunctionCountError,
@@ -141,7 +143,11 @@ def type_checker(
 
             result["valid"] = False
             result["error"] = [
-                f"Nested type checking failed for parameter {repr(param)}. Expected outer type {expected_type_description} with inner type {str(nested_type_converted)}. Parameter value: {repr(value)}."
+                (
+                    f"Nested type checking failed for parameter {repr(param)}.f"
+                    f"Expected outer type {expected_type_description} with inner type {str(nested_type_converted)}. "
+                    f"Parameter value: {repr(value)}."
+                )
             ]
             result["error_type"] = "type_error:nested"
 
@@ -158,14 +164,18 @@ def type_checker(
 
     result["valid"] = False
     result["error"].append(
-        f"Incorrect type for parameter {repr(param)}. Expected type {expected_type_description}, got {type(value).__name__}. Parameter value: {repr(value)}."
+        (
+            f"Incorrect type for parameter {repr(param)}. "
+            f"Expected type {expected_type_description}, got {type(value).__name__}. Parameter value: {repr(value)}."
+        )
     )
     result["error_type"] = "type_error:simple"
     return result
 
 
 def standardize_string(input_string: str):
-    # This function standardizes the string by removing all the spaces, ",./-_*^" punctuation, and converting it to lowercase
+    # This function standardizes the string by removing all the spaces, ",./-_*^" punctuation, and converting it to
+    # lowercase
     # It will also convert all the single quotes to double quotes
     # This is used to compare the model output with the possible answers
     # We don't want to punish model for answer like April 1, 2024 vs April 1,2024, vs April 1 2024
@@ -184,7 +194,8 @@ def string_checker(param: str, model_output: str, possible_answer: list):
         return {
             "valid": False,
             "error": [
-                f"Invalid value for parameter {repr(param)}: {repr(model_output)}. Expected one of {possible_answer}. Case insensitive."
+                f"Invalid value for parameter {repr(param)}: {repr(model_output)}. "
+                f"Expected one of {possible_answer}. Case insensitive."
             ],
             "error_type": "value_error:string",
         }
@@ -264,7 +275,10 @@ def dict_checker(param: str, model_output: dict, possible_answers: list):
             if standardize_value not in standardize_possible_answer:
                 result["valid"] = False
                 result["error"].append(
-                    f"Invalid value for parameter {repr(key)}: {repr(value)}. Expected one of {standardize_possible_answer}."
+                    (
+                        f"Invalid value for parameter {repr(key)}: {repr(value)}. "
+                        f"Expected one of {standardize_possible_answer}."
+                    )
                 )
                 result["error_type"] = "value_error:dict_value"
                 flag = False
@@ -293,7 +307,8 @@ def list_dict_checker(param: str, model_output: list, possible_answers: list):
     for answer_index in range(len(possible_answers)):
         flag = True  # True means so far, all dictionaries are valid
 
-        # Only proceed if the number of dictionaries in the list matches the number of dictionaries in the possible answers
+        # Only proceed if the number of dictionaries in the list matches the number of dictionaries in the possible
+        # answers
         if len(model_output) != len(possible_answers[answer_index]):
             result["valid"] = False
             result["error"] = ["Wrong number of dictionaries in the list."]
@@ -370,7 +385,8 @@ def simple_function_checker(
                                 f"Incorrect type for parameter {repr(param)}. "
                                 f"Expected type String, got {type(value).__name__}. "
                                 f"Parameter value: {repr(value)}."
-                            )
+                            ),
+                            error_type="type_error:java",
                         )
                     ]
                     return result
@@ -387,11 +403,17 @@ def simple_function_checker(
 
             if expected_type_description in JS_TYPE_CONVERSION:
                 if type(value) != str:
-                    result["valid"] = False
-                    result["error"].append(
-                        f"Incorrect type for parameter {repr(param)}. Expected type String, got {type(value).__name__}. Parameter value: {repr(value)}."
-                    )
-                    result["error_type"] = "type_error:js"
+                    result.valid = False
+                    result.errors = [
+                        IncorrectTypeForParameterError(
+                            message=(
+                                f"Incorrect type for parameter {repr(param)}. "
+                                f"Expected type String, got {type(value).__name__}. "
+                                f"Parameter value: {repr(value)}."
+                            ),
+                            error_type="type_error:js",
+                        )
+                    ]
                     return result
 
                 if expected_type_description in NESTED_CONVERSION_TYPE_LIST:
@@ -408,8 +430,10 @@ def simple_function_checker(
                 nested_type_converted = PYTHON_TYPE_MAPPING[nested_type]
 
         # We convert all tuple value to list when the expected type is tuple.
-        # The conversion is necessary because any tuple in the possible answer would become a list after being processed through json.dump() and json.load().
-        # This does introduce some false positive (eg, when the model provides a list value instead of tuple). We hope to find a better solution in the future.
+        # The conversion is necessary because any tuple in the possible answer would become a list after being
+        # processed through json.dump() and json.load().
+        # This does introduce some false positive (eg, when the model provides a list value instead of tuple).
+        # We hope to find a better solution in the future.
         if expected_type_description == "tuple" and type(value) == tuple:
             value = list(value)
 
@@ -419,7 +443,8 @@ def simple_function_checker(
 
         # Type checking
         # In fact, we only check for Python here.
-        # Type check for other languages are handled by the type converter, and so their value (after conversion) is always correct.
+        # Type check for other languages are handled by the type converter, and so their value (after conversion) is
+        # always correct.
         type_check_result = type_checker(
             param,
             value,
@@ -430,54 +455,84 @@ def simple_function_checker(
         )
         is_variable = type_check_result["is_variable"]
         if not type_check_result["valid"]:
-            return type_check_result
+            result.valid = False
+            result.errors = [
+                IncorrectTypeForParameterError(
+                    message=type_check_result["error"], error_type=type_check_result["error_type"]
+                )
+            ]
+            return result
 
         # It doesn't make sense to special handle dictionaries and list of dictionaries if the value is a variable.
         # We can just treat the variable as a string and use the normal flow.
         if not is_variable:
             # Special handle for dictionaries
             if expected_type_converted == dict:
-                result = dict_checker(param, value, possible_answer[param])
-                if not result["valid"]:
+                checker_result = dict_checker(param, value, possible_answer[param])
+                if not checker_result["valid"]:
+                    result.valid = False
+                    result.errors = [
+                        IncorrectValueError(message=checker_result["error"], error_type=checker_result["error_type"])
+                    ]
                     return result
                 continue
 
             # Special handle for list of dictionaries
             elif expected_type_converted == list and nested_type_converted == dict:
-                result = list_dict_checker(param, value, possible_answer[param])
-                if not result["valid"]:
+                checker_result = list_dict_checker(param, value, possible_answer[param])
+                if not checker_result["valid"]:
+                    result.valid = False
+                    result.errors = [
+                        IncorrectValueError(message=checker_result["error"], error_type=checker_result["error_type"])
+                    ]
                     return result
                 continue
 
             # Special handle for strings
             elif expected_type_converted == str:
                 # We don't check for case sensitivity for string, as long as it's not a variable
-                result = string_checker(param, value, possible_answer[param])
-                if not result["valid"]:
+                checker_result = string_checker(param, value, possible_answer[param])
+                if not checker_result["valid"]:
+                    result.valid = False
+                    result.errors = [
+                        IncorrectValueError(message=checker_result["error"], error_type=checker_result["error_type"])
+                    ]
                     return result
                 continue
 
             elif expected_type_converted == list:
-                result = list_checker(param, value, possible_answer[param])
-                if not result["valid"]:
+                checker_result = list_checker(param, value, possible_answer[param])
+                if not checker_result["valid"]:
+                    result.valid = False
+                    result.errors = [
+                        IncorrectValueError(message=checker_result["error"], error_type=checker_result["error_type"])
+                    ]
                     return result
                 continue
 
         # Check if the value is within the possible answers
         if value not in possible_answer[param]:
-            result["valid"] = False
-            result["error"].append(
-                f"Invalid value for parameter {repr(param)}: {repr(value)}. Expected one of {possible_answer[param]}."
-            )
-            result["error_type"] = "value_error:others"
+            result.valid = False
+            result.errors = [
+                IncorrectValueError(
+                    message=(
+                        f"Invalid value for parameter {repr(param)}: {repr(value)}. "
+                        f"Expected one of {possible_answer[param]}."
+                    ),
+                    error_type="value_error:others",
+                )
+            ]
             return result
 
     # Check for optional parameters not provided but allowed
     for param in possible_answer:
         if param not in model_params and "" not in possible_answer[param]:
-            result["valid"] = False
-            result["error"].append(f"Optional parameter {repr(param)} not provided and not marked as optional.")
-            result["error_type"] = "simple_function_checker:missing_optional"
+            result.valid = False
+            result.errors = [
+                MissingOptionalParameterError(
+                    message=f"Optional parameter {repr(param)} not provided and not marked as optional."
+                )
+            ]
             return result
 
     return result

@@ -10,9 +10,19 @@ class BaseError(BaseModel):
     error_type: str = Field(description="The type of the error")
 
 
+class IncorrectValueError(BaseError):
+    message: List[str] = ["Incorrect value."]
+    error_type: str = "dict_checker:incorrect_value"
+
+
 class IncorrectTypeForParameterError(BaseError):
     message: List[str] = ["Incorrect type for parameter."]
     error_type: str = "simple_function_checker:incorrect_type"
+
+
+class MissingOptionalParameterError(BaseError):
+    message: List[str] = ["Missing optional parameter."]
+    error_type: str = "simple_function_checker:missing_optional"
 
 
 class MissingRequiredParameterError(BaseError):
