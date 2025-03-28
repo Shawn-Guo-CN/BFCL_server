@@ -484,7 +484,7 @@ def simple_function_checker(
 
             # Special handle for list of dictionaries
             elif expected_type_converted == list and nested_type_converted == dict:
-                checker_result = list_dict_checker(param, value, possible_answer[param])
+                checker_result = list_dict_checker(param, value, possible_answer.parameters[param])
                 if not checker_result["valid"]:
                     result.valid = False
                     result.errors = [
@@ -496,7 +496,7 @@ def simple_function_checker(
             # Special handle for strings
             elif expected_type_converted == str:
                 # We don't check for case sensitivity for string, as long as it's not a variable
-                checker_result = string_checker(param, value, possible_answer[param])
+                checker_result = string_checker(param, value, possible_answer.parameters[param])
                 if not checker_result["valid"]:
                     result.valid = False
                     result.errors = [
@@ -506,7 +506,7 @@ def simple_function_checker(
                 continue
 
             elif expected_type_converted == list:
-                checker_result = list_checker(param, value, possible_answer[param])
+                checker_result = list_checker(param, value, possible_answer.parameters[param])
                 if not checker_result["valid"]:
                     result.valid = False
                     result.errors = [
@@ -594,7 +594,6 @@ def parallel_function_checker_no_order(
     model_output: list,
     possible_answers: list,
     language: str,
-    model_name: str,
 ):
     if len(model_output) != len(possible_answers):
         return BaseResponse(
@@ -654,22 +653,24 @@ def multiple_function_checker(
     model_output: list,
     possible_answers: list,
     language: str,
-    model_name: str,
 ):
     if len(model_output) != len(possible_answers):
-        return {
-            "valid": False,
-            "error": ["Wrong number of functions."],
-            "error_type": "multiple_function_checker:wrong_count",
-        }
+        return BaseResponse(
+            valid=False,
+            correct=False,
+            errors=[
+                WrongFunctionCountError(
+                    message="Wrong number of functions.", error_type="multiple_function_checker:wrong_count"
+                )
+            ],
+        )
 
     # possible_answers is a list of only one dictionary with only one key
-    func_name_expected = list(possible_answers[0].keys())[0]
+    func_name_expected = possible_answers[0].function_name
     func_description = find_description(func_descriptions, func_name_expected)
     return simple_function_checker(
         func_description,
         model_output[0],
         possible_answers[0],
         language,
-        model_name,
     )

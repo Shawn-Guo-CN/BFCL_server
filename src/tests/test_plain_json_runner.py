@@ -88,3 +88,39 @@ class TestPlainJsonRunner:
         sample = {"id": "simple_2", "completion": '[{"math.hypot":, {"x": 4, "y": 5, "w": 1}}]'}
         result = runner.run(**sample)
         assert result.get("formatted") is False
+
+    def test_positive_ast_multiple_with_optional_parameter(self, runner):
+        """Test the positive ast multiple sample with optional parameter."""
+        sample = {
+            "id": "multiple_3",
+            "completion": '[{"EuclideanDistance.calculate": {"pointA": [3, 4], "pointB": [1, 2], "rounding": 0}}]',
+        }
+        result = runner.run(**sample)
+        assert result.get("correct") is True
+
+    def test_positive_ast_multiple_without_optional_parameter(self, runner):
+        """Test the positive ast multiple sample without optional parameter."""
+        sample = {
+            "id": "multiple_3",
+            "completion": '[{"EuclideanDistance.calculate": {"pointA": [3, 4], "pointB": [1, 2]}}]',
+        }
+        result = runner.run(**sample)
+        assert result.get("correct") is True
+
+    def test_negative_ast_multiple_missing_required_parameter(self, runner):
+        """Test the negative ast multiple sample with missing required parameter."""
+        sample = {
+            "id": "multiple_3",
+            "completion": '[{"EuclideanDistance.calculate": {"pointA": [3, 4], "rounding": 0}}]',
+        }
+        result = runner.run(**sample)
+        assert result.get("correct") is False and result.get("errors")[0].get("error_type").endswith("missing_required")
+
+    def test_negative_ast_multiple_unexpected_parameter(self, runner):
+        """Test the negative ast multiple sample with unexpected parameter."""
+        sample = {
+            "id": "multiple_3",
+            "completion": '[{"EuclideanDistance.calculate": {"pointA": [3, 4], "pointB": [1, 2], "rounding": 0, "unexpected_param": 1}}]',
+        }
+        result = runner.run(**sample)
+        assert result.get("correct") is False and result.get("errors")[0].get("error_type").endswith("unexpected_param")
