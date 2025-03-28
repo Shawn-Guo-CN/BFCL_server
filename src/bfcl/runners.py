@@ -49,43 +49,6 @@ class BaseRunner(ABC):
             # TestCategory.REST: self.run_executable_calls,
         }
 
-    def _decode_executable_tool_call(self, tool_call: Dict[str, Any]) -> Dict[str, Any] | None:
-        """Decode the tool call for the executable category.
-
-        Args:
-            tool_call (Dict[str, Any]): The tool call to decode.
-
-        Returns:
-            A dictionary with the following keys
-                - tool_name (str): The name of the tool to call.
-                - call (str): The call to make to the tool.
-        """
-        parameter_key_value_list = []
-        for parameter_name, parameter_value in tool_call["parameters"].items():
-            if type(parameter_value) == float:
-                # 0.30000000000000004 -> 0.3
-                parameter_value = round(parameter_value, 5)
-            elif type(parameter_value) == list and len(parameter_value) > 0:
-                # [0.30000000000000004, 0.30000000000000004] -> [0.3, 0.3]
-                if type(parameter_value[0]) == float:
-                    try:
-                        tmp_parameter_value = [round(number, 5) for number in parameter_value]
-                        parameter_value = tmp_parameter_value
-                    except:
-                        pass
-            elif "_fibonacci_" in tool_call["tool_name"]:
-                # we add logic to filter out extremely large input for _fibonacci_ related functions
-                if type(parameter_value) in [float, int]:
-                    if parameter_value > 100:  # pyright: ignore [reportOperatorIssue]
-                        # set a maximum input value as 100
-                        parameter_value = 100
-            parameter_key_value_list.append(f"{parameter_name}={repr(parameter_value)}")
-
-        return {
-            "tool_name": tool_call["tool_name"],
-            "call": f"{tool_call['tool_name']}({', '.join(parameter_key_value_list)})",
-        }
-
     def _exec_single_tool_call(self, tool_call: Dict[str, Any]) -> Any:
         """Execute a single tool call.
 
@@ -143,7 +106,9 @@ class BaseRunner(ABC):
         """
         raise NotImplementedError
 
-    def run_relevance_calls(self, tool_calls: List[Dict[str, Any]] | None, category: TestCategory) -> BaseResponse:
+    def run_relevance_calls(
+        self, id: str, tool_calls: List[Dict[str, Any]] | None, category: TestCategory
+    ) -> BaseResponse:
         """Run the tool call for the relevance category.
 
         Args:
@@ -157,10 +122,13 @@ class BaseRunner(ABC):
         eval_runner.py#L309` for the reference.
         """
         response = BaseResponse()
-        response.correct = isinstance(tool_calls, ToolCallList)
+        response.valid = isinstance(tool_calls, ToolCallList)
+        response.correct = response.valid
         return response
 
-    def run_irrelevance_calls(self, tool_calls: List[Dict[str, Any]] | None, category: TestCategory) -> BaseResponse:
+    def run_irrelevance_calls(
+        self, id: str, tool_calls: List[Dict[str, Any]] | None, category: TestCategory
+    ) -> BaseResponse:
         """Run the tool call for the irrelevance category.
 
         Args:
@@ -170,10 +138,13 @@ class BaseRunner(ABC):
             A `BaseResponse` object
         """
         response = BaseResponse()
-        response.correct = tool_calls is None or not isinstance(tool_calls, ToolCallList)
+        response.valid = tool_calls is None or not isinstance(tool_calls, ToolCallList)
+        response.correct = response.valid
         return response
 
-    def run_executable_calls(self, tool_calls: List[Dict[str, Any]] | None, category: TestCategory) -> BaseResponse:
+    def run_executable_calls(
+        self, id: str, tool_calls: List[Dict[str, Any]] | None, category: TestCategory
+    ) -> BaseResponse:
         """Run the tool call for the executable category.
 
         Args:
@@ -248,16 +219,24 @@ class BaseRunner(ABC):
                 - result (list, optional): List of results from each call.
         """
         response = BaseResponse()
-        response.formatted = self.validate_raw_completion_format(completion)
-        if not response.formatted:
-            return response.model_dump()
 
+        # get the category
         category = self.id_mapper.get_category(id)
         if category is None:
             response.errors[0].message = [f"Category for id {id} is not found."]
             return response.model_dump()
 
+        # validate the tool call format for non-irrelevance categories
+        if not category in [TestCategory.IRRELEVANCE, TestCategory.LIVE_IRRELEVANCE]:
+            response.formatted = self.validate_raw_completion_format(completion)
+            if not response.formatted:
+                return response.model_dump()
+        response.formatted = True
+
+        # decode the tool calls
         tool_calls = self.decode_tool_calls(completion)
+
+        # run the tool calls
         handler = self.category_handlers.get(category)
         if handler is None:
             response.errors[0].message = [f"Handler for category {category} is not supported yet."]
@@ -295,7 +274,11 @@ class PlainJsonRunner(BaseRunner):
         super().__init__()
 
     def validate_raw_completion_format(self, completion: str) -> bool:
-        return True
+        try:
+            json.loads(completion)
+            return True
+        except:
+            return False
 
     def decode_tool_calls(self, completion: str) -> List[Dict[str, Any]] | None:
         """Decode the raw completion into a tool call.

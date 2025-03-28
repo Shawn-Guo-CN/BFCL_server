@@ -463,7 +463,7 @@ def simple_function_checker(
             result.valid = False
             result.errors = [
                 IncorrectTypeForParameterError(
-                    message=[type_check_result["error"]], error_type=type_check_result["error_type"]
+                    message=type_check_result["error"], error_type=type_check_result["error_type"]
                 )
             ]
             return result
@@ -477,7 +477,7 @@ def simple_function_checker(
                 if not checker_result["valid"]:
                     result.valid = False
                     result.errors = [
-                        IncorrectValueError(message=[checker_result["error"]], error_type=checker_result["error_type"])
+                        IncorrectValueError(message=checker_result["error"], error_type=checker_result["error_type"])
                     ]
                     return result
                 continue
@@ -488,7 +488,7 @@ def simple_function_checker(
                 if not checker_result["valid"]:
                     result.valid = False
                     result.errors = [
-                        IncorrectValueError(message=[checker_result["error"]], error_type=checker_result["error_type"])
+                        IncorrectValueError(message=checker_result["error"], error_type=checker_result["error_type"])
                     ]
                     return result
                 continue
@@ -500,7 +500,7 @@ def simple_function_checker(
                 if not checker_result["valid"]:
                     result.valid = False
                     result.errors = [
-                        IncorrectValueError(message=[checker_result["error"]], error_type=checker_result["error_type"])
+                        IncorrectValueError(message=checker_result["error"], error_type=checker_result["error_type"])
                     ]
                     return result
                 continue
@@ -510,7 +510,7 @@ def simple_function_checker(
                 if not checker_result["valid"]:
                     result.valid = False
                     result.errors = [
-                        IncorrectValueError(message=[checker_result["error"]], error_type=checker_result["error_type"])
+                        IncorrectValueError(message=checker_result["error"], error_type=checker_result["error_type"])
                     ]
                     return result
                 continue
