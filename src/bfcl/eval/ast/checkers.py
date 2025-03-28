@@ -95,7 +95,8 @@ def type_checker(
     nested_type_converted,
 ):
     # NOTE: This type checker only supports nested type checking for one level deep.
-    # We didn't implement recursive type checking for nested types, as it's not needed for the current use case and it's very complex.
+    # We didn't implement recursive type checking for nested types, as it's not needed for the current use case and
+    # it's very complex.
 
     result = {
         "valid": True,
@@ -118,7 +119,7 @@ def type_checker(
     # value is the same type as in function description
     if type(value) == expected_type_converted:
         # We don't need to do recursive check for simple types
-        if nested_type_converted == None:
+        if nested_type_converted is None:
             result["is_variable"] = is_variable
             return result
         else:
@@ -338,7 +339,6 @@ def simple_function_checker(
     possible_answer: ToolCall,
     language: str,
 ) -> BaseResponse:
-    possible_answer = list(possible_answer.values())[0]
     # Extract function name and parameters details
     func_name = func_description["name"]
     param_details = func_description["parameters"]["properties"]
@@ -348,23 +348,21 @@ def simple_function_checker(
     result = BaseResponse()
 
     # Check if function name matches
-    if model_output.function_name not in func_name:
+    if not model_output.function_name == func_name:
         result.valid = False  # TODO: leave it here for clarity at the beginning, shall be removed later
         result.errors = [WrongFunctionNameError(message=f"Function name {repr(func_name)} not found in model output.")]
         return result
 
-    model_params = model_output.parameters.keys()
-
     # Check for required parameters in model output
     for param in required_params:
-        if param not in model_params:
+        if param not in model_output.parameters.keys():
             result.valid = False
             result.errors = [MissingRequiredParameterError(message=f"Missing required parameter: {repr(param)}.")]
             return result
 
     # Validate types and values for each parameter in model output
-    for param in model_params:
-        if param not in param_details or param not in possible_answer:
+    for param, value in model_output.parameters.items():
+        if param not in param_details or param not in possible_answer.parameters:
             result.valid = False
             result.errors = [UnexpectedParameterError(message=f"Unexpected parameter: {repr(param)}.")]
             return result
@@ -374,7 +372,7 @@ def simple_function_checker(
         is_variable = False
         nested_type_converted = None
 
-        if language == "Java":
+        if language == "java":
             expected_type_converted = JAVA_TYPE_CONVERSION[expected_type_description]
 
             if expected_type_description in JAVA_TYPE_CONVERSION:
@@ -399,7 +397,7 @@ def simple_function_checker(
                 else:
                     value = java_type_converter(value, expected_type_description)
 
-        elif language == "JavaScript":
+        elif language == "javascript":
             expected_type_converted = JS_TYPE_CONVERSION[expected_type_description]
 
             if expected_type_description in JS_TYPE_CONVERSION:
@@ -424,10 +422,10 @@ def simple_function_checker(
                 else:
                     value = js_type_converter(value, expected_type_description)
 
-        elif language == "Python":
+        elif language == "python":
             expected_type_converted = PYTHON_TYPE_MAPPING[expected_type_description]
             if expected_type_description in PYTHON_NESTED_TYPE_CHECK_LIST:
-                nested_type = param_details[param]["items"]["type"]
+                nested_type = param_details[param]["type"]
                 nested_type_converted = PYTHON_TYPE_MAPPING[nested_type]
 
         # We convert all tuple value to list when the expected type is tuple.
@@ -439,7 +437,7 @@ def simple_function_checker(
             value = list(value)
 
         # Allow python auto conversion from int to float
-        if language == "Python" and expected_type_description == "float" and type(value) == int:
+        if language == "python" and expected_type_description == "float" and type(value) == int:
             value = float(value)
 
         # Type checking
@@ -449,7 +447,7 @@ def simple_function_checker(
         type_check_result = type_checker(
             param,
             value,
-            possible_answer[param],
+            possible_answer.parameters[param],
             expected_type_description,
             expected_type_converted,
             nested_type_converted,
@@ -512,13 +510,13 @@ def simple_function_checker(
                 continue
 
         # Check if the value is within the possible answers
-        if value not in possible_answer[param]:
+        if value not in possible_answer.parameters[param]:
             result.valid = False
             result.errors = [
                 IncorrectValueError(
                     message=(
                         f"Invalid value for parameter {repr(param)}: {repr(value)}. "
-                        f"Expected one of {possible_answer[param]}."
+                        f"Expected one of {possible_answer.parameters[param]}."
                     ),
                     error_type="value_error:others",
                 )
@@ -526,8 +524,8 @@ def simple_function_checker(
             return result
 
     # Check for optional parameters not provided but allowed
-    for param in possible_answer:
-        if param not in model_params and "" not in possible_answer[param]:
+    for param in possible_answer.parameters.keys():
+        if param not in model_output.parameters.keys() and "" not in possible_answer.parameters[param]:
             result.valid = False
             result.errors = [
                 MissingOptionalParameterError(

@@ -6,11 +6,12 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List
 
-import bfcl.eval.ast.checkers as ast_checker
 import bfcl.eval.exec.executable_python_functions as exec_funcs
 from bfcl.constants.category_mappings import TestCategory
 from bfcl.constants.id_mapper import IDMapper
-from bfcl.schemas.responses import BaseResponse
+from bfcl.eval.ast.checkers import ast_checker
+from bfcl.schemas.responses import ASTRunTimeError, BaseResponse
+from bfcl.schemas.tool_calls import ToolCallList
 
 logger = logging.getLogger(__name__)
 
@@ -131,17 +132,14 @@ class BaseRunner(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def decode_tool_calls(self, completion: str) -> List[Dict[str, Any]] | None:
+    def decode_tool_calls(self, completion: str) -> ToolCallList | None:
         """Decode model completion into a tool call.
 
         Args:
             raw_completion (str): The raw completion to decode.
 
         Returns:
-            A list of dictionaries with the following keys:
-                - tool_name (str): The name of the tool to call.
-                - parameters (str): The parameters to pass to the tool.
-            or None if the completion cannot be decoded.
+            A `ToolCallList` object or None if the completion cannot be decoded.
         """
         raise NotImplementedError
 
@@ -159,7 +157,7 @@ class BaseRunner(ABC):
         eval_runner.py#L309` for the reference.
         """
         response = BaseResponse()
-        response.correct = tool_calls is not None
+        response.correct = isinstance(tool_calls, ToolCallList)
         return response
 
     def run_irrelevance_calls(self, tool_calls: List[Dict[str, Any]] | None, category: TestCategory) -> BaseResponse:
@@ -172,7 +170,7 @@ class BaseRunner(ABC):
             A `BaseResponse` object
         """
         response = BaseResponse()
-        response.correct = tool_calls is None or len(tool_calls) == 0
+        response.correct = tool_calls is None or not isinstance(tool_calls, ToolCallList)
         return response
 
     def run_executable_calls(self, tool_calls: List[Dict[str, Any]] | None, category: TestCategory) -> BaseResponse:
@@ -206,7 +204,7 @@ class BaseRunner(ABC):
 
         return response
 
-    def run_ast_calls(self, tool_calls: List[Dict[str, Any]] | None, category: TestCategory) -> BaseResponse:
+    def run_ast_calls(self, id: str, tool_calls: List[Dict[str, Any]] | None, category: TestCategory) -> BaseResponse:
         """Run the tool call for the AST category.
 
         Args:
@@ -217,33 +215,24 @@ class BaseRunner(ABC):
 
         TODO: check the correctness of the results
         """
-        self._set_ast_helpers()
+        assert isinstance(tool_calls, ToolCallList), "Tool calls must be a `ToolCallList` object."
 
-        response = BaseResponse()
-        if tool_calls is None:
-            return response
-        if isinstance(tool_calls, dict) and len(tool_calls) != 1:
-            return response
-        _category = category.category_name.split("_")[-1]  # `simple`, `multiple`, or `parallel`
-
-        q_id = self.question_mapper.get_id(tool_calls[0]["user_question"])
-        check_result = None
         try:
-            check_result = ast_checker(
-                func_description=self.function_mapper.get_func_description(q_id),
+            checker_result = ast_checker(
+                func_description=self.id_mapper.get_function_description(id),
                 tool_calls=tool_calls,
-                ground_truth=self.ground_truth_mapper.get_ground_truth(q_id),
-                test_category=_category,
+                possible_answer=self.id_mapper.get_ground_truth(id),
+                language=self.id_mapper.get_language(id),
+                category_name=category.value[1],
             )
-
-            if check_result["valid"]:
-                response.correct = True
-                response.result = []
         except Exception as e:
             logger.info(f"Failed to run AST tool calls: {tool_calls}, error: {str(e)}")
-            return response
+            return BaseResponse(
+                errors=[ASTRunTimeError(message=["AST checker failed for unknown reason."])],
+                results=None,
+            )
 
-        return response
+        return checker_result
 
     def run(self, id: str, completion: str) -> Dict[str, Any]:
         """Run the tool call provided.
@@ -274,8 +263,9 @@ class BaseRunner(ABC):
             response.errors[0].message = [f"Handler for category {category} is not supported yet."]
             return response.model_dump()
 
-        category_response = handler(tool_calls, category)
+        category_response = handler(id, tool_calls, category)
 
+        response.valid = category_response.valid
         response.correct = category_response.correct
         response.results = category_response.results
         response.errors = category_response.errors
@@ -317,6 +307,8 @@ class PlainJsonRunner(BaseRunner):
             A list of tool calls or None if the completion cannot be decoded.
         """
         try:
-            return json.loads(completion)
+            json_dict = json.loads(completion)
+            tool_calls = ToolCallList.from_json_dict_list(json_dict)
+            return tool_calls
         except:
             return None  # None for empty tool calls

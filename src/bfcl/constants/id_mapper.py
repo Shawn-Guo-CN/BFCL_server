@@ -17,6 +17,7 @@ class IDMapper:
 
     def __init__(self):
         self.id_to_category = {}
+        self.id_to_language = {}
         self.id_to_ground_truth = {}
         self.id_to_function_description = {}
 
@@ -25,6 +26,10 @@ class IDMapper:
                 for line in f:
                     data = json.loads(line.strip())
                     self.id_to_category[data["id"]] = category
+                    if category in TestCollection.PYTHON.value[2]:
+                        self.id_to_language[data["id"]] = "python"
+                    else:
+                        self.id_to_language[data["id"]] = category.value[1]
             if category.value[3]:
                 with open(Path(POSSIBLE_ANSWER_PATH) / category.value[2], "r") as f:
                     for line in f:
@@ -48,8 +53,16 @@ class IDMapper:
         return self.id_to_ground_truth[id]
 
     def get_function_description(self, id: str) -> List[Dict[str, Any]]:
+        # TODO: make function description a base model
         """Get the function description of the given ID."""
         if id not in self.id_to_function_description:
             logger.error(f"No function description found for the given ID: {id}")
             raise ValueError(f"No function description found for the given ID: {id}")
         return self.id_to_function_description[id]
+
+    def get_language(self, id: str) -> str:
+        """Get the language of the given ID."""
+        if id not in self.id_to_language:
+            logger.error(f"No language found for the given ID: {id}")
+            raise ValueError(f"No language found for the given ID: {id}")
+        return self.id_to_language[id]

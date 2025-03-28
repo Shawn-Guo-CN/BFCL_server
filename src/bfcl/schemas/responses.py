@@ -35,6 +35,11 @@ class MissingRequiredParameterError(BaseError):
     error_type: str = "simple_function_checker:missing_required"
 
 
+class ASTRunTimeError(BaseError):
+    message: List[str] = ["AST run time error."]
+    error_type: str = "ast_checker:runtime_error"
+
+
 class UnexpectedParameterError(BaseError):
     message: List[str] = ["Unexpected parameter."]
     error_type: str = "simple_function_checker:unexpected_param"
