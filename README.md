@@ -44,14 +44,17 @@ An example of running a tool call is as follows:
 import requests
 
 test_call = {
-    "id": "irrelevance_5",
-    "completion": "I don't have the correct tool to answer the question."
+    "id": "simple_2",
+    "completion": '[{"math.hypot": {"x": 4, "y": 5, "z": 0}}]'
 }
 
 response = requests.get("http://127.0.0.1:1123/run", json=test_call)
-print('Response:', response.json())
+print('response:', response.json())
+print('formatted:', response.json()['formatted'])
 print('valid:', response.json()['valid'])
 print('correct:', response.json()['correct'])
+print('results:', response.json()['results'])
+print('errors:', response.json()['errors'])
 ```
 
 
@@ -69,7 +72,7 @@ We hereby describe the high-level architecture of the project. The main modules 
 
 ## Features to be added
 
-- [ ] Runner for the `AST` category.
+- [x] Runner for the `AST` category.
 - [ ] Runner for the `Executable` category.
 - [ ] Support for installing as a dependency.
 - [ ] Runner for the `Multi-Turn` category.
