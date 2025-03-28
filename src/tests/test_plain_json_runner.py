@@ -191,3 +191,52 @@ class TestPlainJsonRunner:
         assert result.get("correct") is False and result.get("errors")[0].get("error_type").endswith(
             "cannot_find_match"
         )
+
+    def test_positive_parallel_multiple(self, runner):
+        """Test the positive parallel multiple sample."""
+        sample = {
+            "id": "parallel_multiple_1",
+            "completion": '[{"area_rectangle.calculate": {"length": 7.0, "breadth": 3.0}}, {"area_circle.calculate": {"radius": 5.0}}]',
+        }
+        result = runner.run(**sample)
+        assert result.get("correct") is True
+
+    def test_negative_parallel_multiple_less_functions(self, runner):
+        """Test the negative parallel multiple sample with less function calls than possible answers."""
+        sample = {
+            "id": "parallel_multiple_1",
+            "completion": '[{"area_rectangle.calculate": {"length": 7.0, "breadth": 3.0}}]',
+        }
+        result = runner.run(**sample)
+        assert result.get("correct") is False
+
+    def test_negative_parallel_multiple_more_functions(self, runner):
+        """Test the negative parallel multiple sample with more function calls than possible answers."""
+        sample = {
+            "id": "parallel_multiple_1",
+            "completion": '[{"area_rectangle.calculate": {"length": 7.0, "breadth": 3.0}}, {"area_circle.calculate": {"radius": 5.0}}, {"area_circle.calculate": {"radius": 5.0}}]',
+        }
+        result = runner.run(**sample)
+        assert result.get("correct") is False
+
+    def test_negative_parallel_multiple_unexpected_parameter(self, runner):
+        """Test the negative parallel multiple sample with unexpected parameter."""
+        sample = {
+            "id": "parallel_multiple_1",
+            "completion": '[{"area_rectangle.calculate": {"length": 7.0, "breadth": 3.0, "wrong_param": 1}}, {"area_circle.calculate": {"radius": 5.0}}]',
+        }
+        result = runner.run(**sample)
+        assert result.get("correct") is False and result.get("errors")[0].get("error_type").endswith(
+            "cannot_find_match"
+        )
+
+    def test_negative_parallel_multiple_missing_required_parameter(self, runner):
+        """Test the negative parallel multiple sample with missing required parameter."""
+        sample = {
+            "id": "parallel_multiple_1",
+            "completion": '[{"area_rectangle.calculate": {"length": 7.0}}, {"area_circle.calculate": {"radius": 5.0}}]',
+        }
+        result = runner.run(**sample)
+        assert result.get("correct") is False and result.get("errors")[0].get("error_type").endswith(
+            "cannot_find_match"
+        )
