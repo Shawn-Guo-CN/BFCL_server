@@ -129,7 +129,11 @@ class TestPlainJsonRunner:
         """Test the positive parallel sample with optional parameter."""
         sample = {
             "id": "parallel_3",
-            "completion": '[{"protein_info.get_sequence_and_3D": {"protein_name": "HbA1c", "model_3d": true}}, {"protein_info.get_sequence_and_3D": {"protein_name": "normal hemoglobin", "model_3d": true}}, {"protein_info.get_sequence_and_3D": {"protein_name": "rat hemoglobin", "model_3d": true}}]',
+            "completion": (
+                '[{"protein_info.get_sequence_and_3D": {"protein_name": "HbA1c", "model_3d": true}}, '
+                '{"protein_info.get_sequence_and_3D": {"protein_name": "normal hemoglobin", "model_3d": true}}, '
+                '{"protein_info.get_sequence_and_3D": {"protein_name": "rat hemoglobin", "model_3d": true}}]'
+            ),
         }
         result = runner.run(**sample)
         assert result.get("correct") is True
@@ -138,7 +142,11 @@ class TestPlainJsonRunner:
         """Test the positive parallel sample without optional parameter."""
         sample = {
             "id": "parallel_3",
-            "completion": '[{"protein_info.get_sequence_and_3D": {"protein_name": "HbA1c"}}, {"protein_info.get_sequence_and_3D": {"protein_name": "normal hemoglobin"}}, {"protein_info.get_sequence_and_3D": {"protein_name": "rat hemoglobin", "model_3d": true}}]',
+            "completion": (
+                '[{"protein_info.get_sequence_and_3D": {"protein_name": "HbA1c"}}, '
+                '{"protein_info.get_sequence_and_3D": {"protein_name": "normal hemoglobin"}}, '
+                '{"protein_info.get_sequence_and_3D": {"protein_name": "rat hemoglobin"}}]'
+            ),
         }
         result = runner.run(**sample)
         assert result.get("correct") is True
@@ -147,7 +155,11 @@ class TestPlainJsonRunner:
         """Test the positive parallel sample with different order."""
         sample = {
             "id": "parallel_3",
-            "completion": '[{"protein_info.get_sequence_and_3D": {"protein_name": "normal hemoglobin"}}, {"protein_info.get_sequence_and_3D": {"protein_name": "HbA1c"}}, {"protein_info.get_sequence_and_3D": {"protein_name": "rat hemoglobin", "model_3d": true}}]',
+            "completion": (
+                '[{"protein_info.get_sequence_and_3D": {"protein_name": "normal hemoglobin"}}, '
+                '{"protein_info.get_sequence_and_3D": {"protein_name": "HbA1c"}}, '
+                '{"protein_info.get_sequence_and_3D": {"protein_name": "rat hemoglobin"}}]'
+            ),
         }
         result = runner.run(**sample)
         assert result.get("correct") is True
@@ -156,7 +168,10 @@ class TestPlainJsonRunner:
         """Test the negative parallel sample with less functions than possible answers."""
         sample = {
             "id": "parallel_3",
-            "completion": '[{"protein_info.get_sequence_and_3D": {"protein_name": "HbA1c", "model_3d": true}}, {"protein_info.get_sequence_and_3D": {"protein_name": "normal hemoglobin", "model_3d": true}}]',
+            "completion": (
+                '[{"protein_info.get_sequence_and_3D": {"protein_name": "HbA1c", "model_3d": true}}, '
+                '{"protein_info.get_sequence_and_3D": {"protein_name": "normal hemoglobin", "model_3d": true}}]'
+            ),
         }
         result = runner.run(**sample)
         assert result.get("correct") is False
@@ -165,7 +180,12 @@ class TestPlainJsonRunner:
         """Test the negative parallel sample with more functions than possible answers."""
         sample = {
             "id": "parallel_3",
-            "completion": '[{"protein_info.get_sequence_and_3D": {"protein_name": "HbA1c", "model_3d": true}}, {"protein_info.get_sequence_and_3D": {"protein_name": "normal hemoglobin", "model_3d": true}}, {"protein_info.get_sequence_and_3D": {"protein_name": "rat hemoglobin", "model_3d": true}}, {"protein_info.get_sequence_and_3D": {"protein_name": "rat hemoglobin", "model_3d": true}}]',
+            "completion": (
+                '[{"protein_info.get_sequence_and_3D": {"protein_name": "HbA1c", "model_3d": true}}, '
+                '{"protein_info.get_sequence_and_3D": {"protein_name": "normal hemoglobin", "model_3d": true}}, '
+                '{"protein_info.get_sequence_and_3D": {"protein_name": "rat hemoglobin", "model_3d": true}}, '
+                '{"protein_info.get_sequence_and_3D": {"protein_name": "rat hemoglobin", "model_3d": true}}]'
+            ),
         }
         result = runner.run(**sample)
         assert result.get("correct") is False
@@ -174,7 +194,12 @@ class TestPlainJsonRunner:
         """Test the negative parallel sample with unexpected parameter."""
         sample = {
             "id": "parallel_3",
-            "completion": '[{"protein_info.get_sequence_and_3D": {"protein_name": "HbA1c", "model_3d": true}}, {"protein_info.get_sequence_and_3D": {"protein_name": "normal hemoglobin", "model_3d": true}}, {"protein_info.get_sequence_and_3D": {"protein_name": "rat hemoglobin", "model_3d": true, "wrong_param": 1}}]',
+            "completion": (
+                '[{"protein_info.get_sequence_and_3D": {"protein_name": "HbA1c", "model_3d": true}}, '
+                '{"protein_info.get_sequence_and_3D": {"protein_name": "normal hemoglobin", "model_3d": true}}, '
+                '{"protein_info.get_sequence_and_3D": '
+                '{"protein_name": "rat hemoglobin", "model_3d": true, "wrong_param": 1}}]'
+            ),
         }
         result = runner.run(**sample)
         assert result.get("correct") is False and result.get("errors")[0].get("error_type").endswith(
@@ -185,7 +210,11 @@ class TestPlainJsonRunner:
         """Test the negative parallel sample with missing required parameter."""
         sample = {
             "id": "parallel_3",
-            "completion": '[{"protein_info.get_sequence_and_3D": {"protein_name": "HbA1c", "model_3d": true}}, {"protein_info.get_sequence_and_3D": {"model_3d": true}}, {"protein_info.get_sequence_and_3D": {"protein_name": "rat hemoglobin", "model_3d": true}}]',
+            "completion": (
+                '[{"protein_info.get_sequence_and_3D": {"protein_name": "HbA1c", "model_3d": true}}, '
+                '{"protein_info.get_sequence_and_3D": {"model_3d": true}}, '
+                '{"protein_info.get_sequence_and_3D": {"protein_name": "rat hemoglobin", "model_3d": true}}]'
+            ),
         }
         result = runner.run(**sample)
         assert result.get("correct") is False and result.get("errors")[0].get("error_type").endswith(
@@ -196,7 +225,10 @@ class TestPlainJsonRunner:
         """Test the positive parallel multiple sample."""
         sample = {
             "id": "parallel_multiple_1",
-            "completion": '[{"area_rectangle.calculate": {"length": 7.0, "breadth": 3.0}}, {"area_circle.calculate": {"radius": 5.0}}]',
+            "completion": (
+                '[{"area_rectangle.calculate": {"length": 7.0, "breadth": 3.0}}, '
+                '{"area_circle.calculate": {"radius": 5.0}}]'
+            ),
         }
         result = runner.run(**sample)
         assert result.get("correct") is True
@@ -214,7 +246,11 @@ class TestPlainJsonRunner:
         """Test the negative parallel multiple sample with more function calls than possible answers."""
         sample = {
             "id": "parallel_multiple_1",
-            "completion": '[{"area_rectangle.calculate": {"length": 7.0, "breadth": 3.0}}, {"area_circle.calculate": {"radius": 5.0}}, {"area_circle.calculate": {"radius": 5.0}}]',
+            "completion": (
+                '[{"area_rectangle.calculate": {"length": 7.0, "breadth": 3.0}}, '
+                '{"area_circle.calculate": {"radius": 5.0}}, '
+                '{"area_circle.calculate": {"radius": 5.0}}]'
+            ),
         }
         result = runner.run(**sample)
         assert result.get("correct") is False
@@ -223,7 +259,10 @@ class TestPlainJsonRunner:
         """Test the negative parallel multiple sample with unexpected parameter."""
         sample = {
             "id": "parallel_multiple_1",
-            "completion": '[{"area_rectangle.calculate": {"length": 7.0, "breadth": 3.0, "wrong_param": 1}}, {"area_circle.calculate": {"radius": 5.0}}]',
+            "completion": (
+                '[{"area_rectangle.calculate": {"length": 7.0, "breadth": 3.0, "wrong_param": 1}}, '
+                '{"area_circle.calculate": {"radius": 5.0}}]'
+            ),
         }
         result = runner.run(**sample)
         assert result.get("correct") is False and result.get("errors")[0].get("error_type").endswith(
