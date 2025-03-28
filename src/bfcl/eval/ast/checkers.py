@@ -4,6 +4,7 @@ Reference: https://github.com/ShishirPatil/gorilla/blob/main/berkeley-function-c
 """
 
 import re
+from collections import defaultdict
 from typing import Any, Dict, List
 
 from bfcl.constants.config import UNDERSCORE_TO_DOT
@@ -598,51 +599,56 @@ def parallel_function_checker_no_order(
     if len(model_output) != len(possible_answers):
         return BaseResponse(
             valid=False,
-            errors=[WrongFunctionCountError(message="Wrong number of functions.")],
-            error_type="parallel_function_checker_no_order:wrong_count",
+            errors=[
+                WrongFunctionCountError(
+                    message=["Wrong number of functions."],
+                    error_type="parallel_function_checker_no_order:wrong_count",
+                )
+            ],
         )
 
     matched_indices = []
+    ground_truth_id_to_errors = defaultdict(list)
 
     # We go throught the possible answers one by one, and eliminate the model output that matches the possible answer
     # It must be this way because we need ground truth to fetch the correct function description
     for i in range(len(possible_answers)):
         # possible_answers[i] is a dictionary with only one key
-        func_name_expected = list(possible_answers[i].keys())[0]
+        func_name_expected = possible_answers[i].function_name
         func_description = find_description(func_descriptions, func_name_expected)
 
-        all_errors = []
-
-        for index in range(len(model_output)):
-            if index in matched_indices:
+        for j in range(len(model_output)):
+            if j in matched_indices:
                 continue
 
             result = simple_function_checker(
                 func_description,
-                model_output[index],
+                model_output[j],
                 possible_answers[i],
                 language,
             )
 
             if result.valid:
-                matched_indices.append(index)
+                matched_indices.append(j)
                 break
             else:
-                all_errors.extend(result.errors)
+                ground_truth_id_to_errors[i].extend(result.errors)
 
         if not result.valid:
             considered_indices = [i for i in range(len(model_output)) if i not in matched_indices]
-            all_errors.insert(
-                0,
+            ground_truth_id_to_errors[i] = [
                 FunctionMismatchError(
-                    message=(
-                        f"Could not find a matching function among index {considered_indices} of model output "
-                        f"for index {i} of possible answers."
-                    ),
+                    message=[
+                        (
+                            f"Could not find a matching function among index {considered_indices} of model output "
+                            f"for index {i} of possible answers."
+                        )
+                    ],
                     error_type="parallel_function_checker_no_order:cannot_find_match",
                 ),
-            )
-            return BaseResponse(valid=False, correct=False, errors=all_errors, results=None)
+            ]
+
+            return BaseResponse(valid=False, correct=False, errors=ground_truth_id_to_errors[i], results=None)
 
     # TODO: check if we should return the results below
     return BaseResponse(valid=True, correct=True, errors=[], results=None)

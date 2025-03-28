@@ -124,3 +124,70 @@ class TestPlainJsonRunner:
         }
         result = runner.run(**sample)
         assert result.get("correct") is False and result.get("errors")[0].get("error_type").endswith("unexpected_param")
+
+    def test_positive_parallel_with_optional_parameter(self, runner):
+        """Test the positive parallel sample with optional parameter."""
+        sample = {
+            "id": "parallel_3",
+            "completion": '[{"protein_info.get_sequence_and_3D": {"protein_name": "HbA1c", "model_3d": true}}, {"protein_info.get_sequence_and_3D": {"protein_name": "normal hemoglobin", "model_3d": true}}, {"protein_info.get_sequence_and_3D": {"protein_name": "rat hemoglobin", "model_3d": true}}]',
+        }
+        result = runner.run(**sample)
+        assert result.get("correct") is True
+
+    def test_positive_parallel_without_optional_parameter(self, runner):
+        """Test the positive parallel sample without optional parameter."""
+        sample = {
+            "id": "parallel_3",
+            "completion": '[{"protein_info.get_sequence_and_3D": {"protein_name": "HbA1c"}}, {"protein_info.get_sequence_and_3D": {"protein_name": "normal hemoglobin"}}, {"protein_info.get_sequence_and_3D": {"protein_name": "rat hemoglobin", "model_3d": true}}]',
+        }
+        result = runner.run(**sample)
+        assert result.get("correct") is True
+
+    def test_positive_parallel_different_order(self, runner):
+        """Test the positive parallel sample with different order."""
+        sample = {
+            "id": "parallel_3",
+            "completion": '[{"protein_info.get_sequence_and_3D": {"protein_name": "normal hemoglobin"}}, {"protein_info.get_sequence_and_3D": {"protein_name": "HbA1c"}}, {"protein_info.get_sequence_and_3D": {"protein_name": "rat hemoglobin", "model_3d": true}}]',
+        }
+        result = runner.run(**sample)
+        assert result.get("correct") is True
+
+    def test_negative_parallel_less_functions(self, runner):
+        """Test the negative parallel sample with less functions than possible answers."""
+        sample = {
+            "id": "parallel_3",
+            "completion": '[{"protein_info.get_sequence_and_3D": {"protein_name": "HbA1c", "model_3d": true}}, {"protein_info.get_sequence_and_3D": {"protein_name": "normal hemoglobin", "model_3d": true}}]',
+        }
+        result = runner.run(**sample)
+        assert result.get("correct") is False
+
+    def test_negative_parallel_more_functions(self, runner):
+        """Test the negative parallel sample with more functions than possible answers."""
+        sample = {
+            "id": "parallel_3",
+            "completion": '[{"protein_info.get_sequence_and_3D": {"protein_name": "HbA1c", "model_3d": true}}, {"protein_info.get_sequence_and_3D": {"protein_name": "normal hemoglobin", "model_3d": true}}, {"protein_info.get_sequence_and_3D": {"protein_name": "rat hemoglobin", "model_3d": true}}, {"protein_info.get_sequence_and_3D": {"protein_name": "rat hemoglobin", "model_3d": true}}]',
+        }
+        result = runner.run(**sample)
+        assert result.get("correct") is False
+
+    def test_negative_parallel_unexpected_parameter(self, runner):
+        """Test the negative parallel sample with unexpected parameter."""
+        sample = {
+            "id": "parallel_3",
+            "completion": '[{"protein_info.get_sequence_and_3D": {"protein_name": "HbA1c", "model_3d": true}}, {"protein_info.get_sequence_and_3D": {"protein_name": "normal hemoglobin", "model_3d": true}}, {"protein_info.get_sequence_and_3D": {"protein_name": "rat hemoglobin", "model_3d": true, "wrong_param": 1}}]',
+        }
+        result = runner.run(**sample)
+        assert result.get("correct") is False and result.get("errors")[0].get("error_type").endswith(
+            "cannot_find_match"
+        )
+
+    def test_negative_parallel_missing_required_parameter(self, runner):
+        """Test the negative parallel sample with missing required parameter."""
+        sample = {
+            "id": "parallel_3",
+            "completion": '[{"protein_info.get_sequence_and_3D": {"protein_name": "HbA1c", "model_3d": true}}, {"protein_info.get_sequence_and_3D": {"model_3d": true}}, {"protein_info.get_sequence_and_3D": {"protein_name": "rat hemoglobin", "model_3d": true}}]',
+        }
+        result = runner.run(**sample)
+        assert result.get("correct") is False and result.get("errors")[0].get("error_type").endswith(
+            "cannot_find_match"
+        )
