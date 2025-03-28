@@ -350,21 +350,23 @@ def simple_function_checker(
     # Check if function name matches
     if not model_output.function_name == func_name:
         result.valid = False  # TODO: leave it here for clarity at the beginning, shall be removed later
-        result.errors = [WrongFunctionNameError(message=f"Function name {repr(func_name)} not found in model output.")]
+        result.errors = [
+            WrongFunctionNameError(message=[f"Function name {repr(func_name)} not found in model output."])
+        ]
         return result
 
     # Check for required parameters in model output
     for param in required_params:
         if param not in model_output.parameters.keys():
             result.valid = False
-            result.errors = [MissingRequiredParameterError(message=f"Missing required parameter: {repr(param)}.")]
+            result.errors = [MissingRequiredParameterError(message=[f"Missing required parameter: {repr(param)}."])]
             return result
 
     # Validate types and values for each parameter in model output
     for param, value in model_output.parameters.items():
         if param not in param_details or param not in possible_answer.parameters:
             result.valid = False
-            result.errors = [UnexpectedParameterError(message=f"Unexpected parameter: {repr(param)}.")]
+            result.errors = [UnexpectedParameterError(message=[f"Unexpected parameter: {repr(param)}."])]
             return result
 
         full_param_details = param_details[param]
@@ -380,11 +382,13 @@ def simple_function_checker(
                     result.valid = False
                     result.errors = [
                         IncorrectTypeForParameterError(
-                            message=(
-                                f"Incorrect type for parameter {repr(param)}. "
-                                f"Expected type String, got {type(value).__name__}. "
-                                f"Parameter value: {repr(value)}."
-                            ),
+                            message=[
+                                (
+                                    f"Incorrect type for parameter {repr(param)}. "
+                                    f"Expected type String, got {type(value).__name__}. "
+                                    f"Parameter value: {repr(value)}."
+                                )
+                            ],
                             error_type="type_error:java",
                         )
                     ]
@@ -405,11 +409,13 @@ def simple_function_checker(
                     result.valid = False
                     result.errors = [
                         IncorrectTypeForParameterError(
-                            message=(
-                                f"Incorrect type for parameter {repr(param)}. "
-                                f"Expected type String, got {type(value).__name__}. "
-                                f"Parameter value: {repr(value)}."
-                            ),
+                            message=[
+                                (
+                                    f"Incorrect type for parameter {repr(param)}. "
+                                    f"Expected type String, got {type(value).__name__}. "
+                                    f"Parameter value: {repr(value)}."
+                                )
+                            ],
                             error_type="type_error:js",
                         )
                     ]
@@ -457,7 +463,7 @@ def simple_function_checker(
             result.valid = False
             result.errors = [
                 IncorrectTypeForParameterError(
-                    message=type_check_result["error"], error_type=type_check_result["error_type"]
+                    message=[type_check_result["error"]], error_type=type_check_result["error_type"]
                 )
             ]
             return result
@@ -471,7 +477,7 @@ def simple_function_checker(
                 if not checker_result["valid"]:
                     result.valid = False
                     result.errors = [
-                        IncorrectValueError(message=checker_result["error"], error_type=checker_result["error_type"])
+                        IncorrectValueError(message=[checker_result["error"]], error_type=checker_result["error_type"])
                     ]
                     return result
                 continue
@@ -482,7 +488,7 @@ def simple_function_checker(
                 if not checker_result["valid"]:
                     result.valid = False
                     result.errors = [
-                        IncorrectValueError(message=checker_result["error"], error_type=checker_result["error_type"])
+                        IncorrectValueError(message=[checker_result["error"]], error_type=checker_result["error_type"])
                     ]
                     return result
                 continue
@@ -494,7 +500,7 @@ def simple_function_checker(
                 if not checker_result["valid"]:
                     result.valid = False
                     result.errors = [
-                        IncorrectValueError(message=checker_result["error"], error_type=checker_result["error_type"])
+                        IncorrectValueError(message=[checker_result["error"]], error_type=checker_result["error_type"])
                     ]
                     return result
                 continue
@@ -504,7 +510,7 @@ def simple_function_checker(
                 if not checker_result["valid"]:
                     result.valid = False
                     result.errors = [
-                        IncorrectValueError(message=checker_result["error"], error_type=checker_result["error_type"])
+                        IncorrectValueError(message=[checker_result["error"]], error_type=checker_result["error_type"])
                     ]
                     return result
                 continue
@@ -512,12 +518,15 @@ def simple_function_checker(
         # Check if the value is within the possible answers
         if value not in possible_answer.parameters[param]:
             result.valid = False
+            result.correct = False
             result.errors = [
                 IncorrectValueError(
-                    message=(
-                        f"Invalid value for parameter {repr(param)}: {repr(value)}. "
-                        f"Expected one of {possible_answer.parameters[param]}."
-                    ),
+                    message=[
+                        (
+                            f"Invalid value for parameter {repr(param)}: {repr(value)}. "
+                            f"Expected one of {possible_answer.parameters[param]}."
+                        )
+                    ],
                     error_type="value_error:others",
                 )
             ]
@@ -529,7 +538,7 @@ def simple_function_checker(
             result.valid = False
             result.errors = [
                 MissingOptionalParameterError(
-                    message=f"Optional parameter {repr(param)} not provided and not marked as optional."
+                    message=[f"Optional parameter {repr(param)} not provided and not marked as optional."]
                 )
             ]
             return result
