@@ -120,7 +120,10 @@ class TestPlainJsonRunner:
         """Test the negative ast multiple sample with unexpected parameter."""
         sample = {
             "id": "multiple_3",
-            "completion": '[{"EuclideanDistance.calculate": {"pointA": [3, 4], "pointB": [1, 2], "rounding": 0, "unexpected_param": 1}}]',
+            "completion": (
+                '[{"EuclideanDistance.calculate": {"pointA": [3, 4], "pointB": [1, 2], "rounding": 0, '
+                '"unexpected_param": 1}}]'
+            ),
         }
         result = runner.run(**sample)
         assert result.get("correct") is False and result.get("errors")[0].get("error_type").endswith("unexpected_param")
@@ -284,7 +287,10 @@ class TestPlainJsonRunner:
         """Test the positive java sample."""
         sample = {
             "id": "java_2",
-            "completion": '[{"FireBirdUtils.getViewSourceWithHeader": {"monitor": "dbMonitor", "view": "EmployeeView", "source": "SELECT * FROM Employee WHERE status = \'active\'"}}]',
+            "completion": (
+                '[{"FireBirdUtils.getViewSourceWithHeader": {"monitor": "dbMonitor", "view": "EmployeeView", '
+                '"source": "SELECT * FROM Employee WHERE status = \'active\'"}}]'
+            ),
         }
         result = runner.run(**sample)
         assert result.get("correct") is True

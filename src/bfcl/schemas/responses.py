@@ -10,6 +10,31 @@ class BaseError(BaseModel):
     error_type: str = Field(description="The type of the error")
 
 
+class ExecutionError(BaseError):
+    message: List[str] = ["Execution failed."]
+    error_type: str = "executable_checker_rest:execution_error"
+
+
+class ExecutionResultCountMismatchError(BaseError):
+    message: List[str] = ["Response list length inconsistency."]
+    error_type: str = "executable_checker_rest:wrong_count"
+
+
+class ExecutionResultKeyMismatchError(BaseError):
+    message: List[str] = ["Key inconsistency."]
+    error_type: str = "executable_checker_rest:wrong_key"
+
+
+class ExecutionResultTypeError(BaseError):
+    message: List[str] = ["Result type inconsistency."]
+    error_type: str = "executable_checker_rest:wrong_type"
+
+
+class ExecutionStatusError(BaseError):
+    message: List[str] = ["Execution result status code is not 200."]
+    error_type: str = "executable_checker_rest:wrong_status_code"
+
+
 class FunctionMismatchError(BaseError):
     message: List[str] = ["Function mismatch."]
     error_type: str = "parallel_function_checker_no_order:cannot_find_match"

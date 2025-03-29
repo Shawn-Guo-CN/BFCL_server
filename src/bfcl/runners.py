@@ -6,10 +6,10 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List
 
-import bfcl.eval.exec.executable_python_functions as exec_funcs
-from bfcl.constants.category_mappings import TestCategory
+from bfcl.constants.category_mappings import TestCategory, TestCollection
 from bfcl.constants.id_mapper import IDMapper
 from bfcl.eval.ast.checkers import ast_checker
+from bfcl.eval.exec.checkers import executable_checker_non_rest, executable_checker_rest
 from bfcl.schemas.responses import ASTRunTimeError, BaseResponse
 from bfcl.schemas.tool_calls import ToolCallList
 
@@ -39,48 +39,15 @@ class BaseRunner(ABC):
             TestCategory.PARALLEL_MULTIPLE: self.run_ast_calls,
             TestCategory.LIVE_PARALLEL_MULTIPLE: self.run_ast_calls,
             # executable
-            # TestCategory.EXEC_SIMPLE: self.run_executable_calls,
-            # TestCategory.EXEC_PARALLEL: self.run_executable_calls,
-            # TestCategory.EXEC_MULTIPLE: self.run_executable_calls,
-            # TestCategory.EXEC_PARALLEL_MULTIPLE: self.run_executable_calls,
+            TestCategory.EXEC_SIMPLE: self.run_executable_calls,
+            TestCategory.EXEC_PARALLEL: self.run_executable_calls,
+            TestCategory.EXEC_MULTIPLE: self.run_executable_calls,
+            TestCategory.EXEC_PARALLEL_MULTIPLE: self.run_executable_calls,
             # non-python
             TestCategory.JAVA: self.run_ast_calls,
             TestCategory.JAVASCRIPT: self.run_ast_calls,
-            # TestCategory.REST: self.run_executable_calls,
+            TestCategory.REST: self.run_executable_calls,
         }
-
-    def _exec_single_tool_call(self, tool_call: Dict[str, Any]) -> Any:
-        """Execute a single tool call.
-
-        Args:
-            tool_call (Dict[str, Any]): The tool call to execute.
-
-        Returns:
-            A dictionary with the following keys
-                - valid (bool): True if the tool call was valid, False otherwise.
-                - result (Any): The result of the tool call, `None` if invalid.
-        """
-        tool_call = self._decode_executable_tool_call(tool_call)
-        result = {"valid": False, "result": None}
-
-        # 1. Check if the tool exists
-        try:
-            # try importing the function from the module
-            func = getattr(exec_funcs, tool_call["tool_name"])
-            globals()[tool_call["tool_name"]] = func
-        except Exception:
-            result["result"] = f"Tool {tool_call['tool_name']} does not exist"
-            return result
-
-        # 2. Execute the tool
-        try:
-            _result = eval(tool_call["call"])
-            result["valid"] = True
-            result["result"] = _result
-        except Exception as e:
-            result["result"] = f"Failed to execute tool call: {str(e)}"
-
-        return result
 
     @abstractmethod
     def validate_raw_completion_format(self, completion: str) -> bool:
@@ -121,6 +88,7 @@ class BaseRunner(ABC):
         `https://github.com/ShishirPatil/gorilla/berkeley-function-call-leaderboard/bfcl/eval_checker/
         eval_runner.py#L309` for the reference.
         """
+        _, __ = id, category
         response = BaseResponse()
         response.valid = isinstance(tool_calls, ToolCallList)
         response.correct = response.valid
@@ -137,18 +105,17 @@ class BaseRunner(ABC):
         Returns:
             A `BaseResponse` object
         """
+        _, __ = id, category
         response = BaseResponse()
         response.valid = tool_calls is None or not isinstance(tool_calls, ToolCallList)
         response.correct = response.valid
         return response
 
-    def run_executable_calls(
-        self, id: str, tool_calls: List[Dict[str, Any]] | None, category: TestCategory
-    ) -> BaseResponse:
+    def run_executable_calls(self, id: str, tool_calls: str | None, category: TestCategory) -> BaseResponse:
         """Run the tool call for the executable category.
 
         Args:
-            tool_call (List[Dict[str, Any]]): The tool calls to execute.
+            tool_calls (str): The tool calls to execute as an eval() python code.
 
         Returns:
             A `BaseResponse` object
@@ -156,19 +123,15 @@ class BaseRunner(ABC):
         TODO: check the correctness of the results
         """
         response = BaseResponse()
+        _, __ = id, category
 
-        # if tool_calls is None, then it's not executable, thus invalid
-        if tool_calls is None:
-            return response
+        ground_truth = self.id_mapper.get_ground_truth(id)
 
-        result_list = []
-        for tool_call in tool_calls:
-            result_list.append(self._exec_single_tool_call(tool_call))
-
-        # TODO: check the correctness of the results
-        if all(item.get("valid") for item in result_list):
-            response.correct = True
-            response.result = [d["result"] for d in result_list]
+        if category == TestCategory.REST:
+            response = executable_checker_rest(tool_calls, ground_truth)
+        else:
+            func_description = self.id_mapper.get_function_description(id)
+            response = executable_checker_non_rest(tool_calls, func_description, category.value[1])
 
         return response
 
@@ -221,14 +184,14 @@ class BaseRunner(ABC):
             return response.model_dump()
 
         # validate the tool call format for non-irrelevance categories
-        if not category in [TestCategory.IRRELEVANCE, TestCategory.LIVE_IRRELEVANCE]:
+        if not category in TestCollection.IRRELEVANCE + TestCollection.EXECUTABLE:
             response.formatted = self.validate_raw_completion_format(completion)
             if not response.formatted:
                 return response.model_dump()
         response.formatted = True
 
         # decode the tool calls
-        tool_calls = self.decode_tool_calls(completion)
+        tool_calls = self.decode_tool_calls(completion, category)
 
         # run the tool calls
         handler = self.category_handlers.get(category)
@@ -274,7 +237,7 @@ class PlainJsonRunner(BaseRunner):
         except:
             return False
 
-    def decode_tool_calls(self, completion: str) -> List[Dict[str, Any]] | None:
+    def decode_tool_calls(self, completion: str, category: TestCategory) -> List[Dict[str, Any]] | str | None:
         """Decode the raw completion into a tool call.
 
         Args:
@@ -283,9 +246,12 @@ class PlainJsonRunner(BaseRunner):
         Returns:
             A list of tool calls or None if the completion cannot be decoded.
         """
-        try:
-            json_dict = json.loads(completion)
-            tool_calls = ToolCallList.from_json_dict_list(json_dict)
-            return tool_calls
-        except:
-            return None  # None for empty tool calls
+        if category in TestCollection.IRRELEVANCE + TestCollection.EXECUTABLE:
+            return completion  # for rest category, the completion is an eval() python code
+        else:
+            try:
+                json_dict = json.loads(completion)
+                tool_calls = ToolCallList.from_json_dict_list(json_dict)
+                return tool_calls
+            except:
+                return None  # None for empty tool calls

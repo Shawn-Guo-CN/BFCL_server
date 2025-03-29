@@ -277,7 +277,13 @@ class TestCollection(Enum):
             ]
         ],
     )
+    IRRELEVANCE = (9, "irrelevance", [TestCategory.IRRELEVANCE, TestCategory.LIVE_IRRELEVANCE])
     # fmt: on
+
+    def __add__(self, other):
+        if isinstance(other, TestCollection):
+            return list(self.value[2]) + list(other.value[2])
+        raise NotImplementedError
 
 
 class Category2CollectionMapping:

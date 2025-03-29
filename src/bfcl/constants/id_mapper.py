@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from bfcl.constants.category_mappings import TestCategory, TestCollection
-from bfcl.constants.config import POSSIBLE_ANSWER_PATH, PROMPT_PATH
+from bfcl.constants.config import POSSIBLE_ANSWER_PATH, PROMPT_PATH, REST_EVAL_GROUND_TRUTH_PATH
 from bfcl.schemas.tool_calls import ToolCallList
 
 logger = logging.getLogger(__name__)
@@ -40,6 +40,12 @@ class IDMapper:
                     for line in f:
                         data = json.loads(line.strip())
                         self.id_to_function_description[data["id"]] = data["function"]
+            if category == TestCategory.REST:
+                with open(Path(REST_EVAL_GROUND_TRUTH_PATH), "r") as f:
+                    eval_ground_truth = [json.loads(line.strip()) for line in f]
+                for idx, data in enumerate(eval_ground_truth):
+                    # ground truth for the rest category is a dict or a list of dicts
+                    self.id_to_ground_truth[f"rest_{idx}"] = eval_ground_truth[idx]
 
     def get_category(self, id: str) -> TestCategory:
         """Get the category of the given ID."""

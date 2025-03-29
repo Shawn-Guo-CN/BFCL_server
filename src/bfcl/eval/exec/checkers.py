@@ -3,27 +3,25 @@
 Reference: https://github.com/ShishirPatil/gorilla/blob/main/berkeley-function-call-leaderboard/bfcl/eval_checker/executable_eval/executable_checker.py
 """
 
-import json
 import time
-from functools import lru_cache
+from typing import List
 
-import requests  # Do not remove this import even though it seems to be unused. It's used in the executable_checker_rest function.
+import requests  # noqa: F401 - requests is used implicitly in eval() function
 
-from bfcl.constants.config import REAL_TIME_MATCH_ALLOWED_DIFFERENCE, REST_EVAL_GROUND_TRUTH_PATH
+from bfcl.constants.config import REAL_TIME_MATCH_ALLOWED_DIFFERENCE
 from bfcl.schemas.exceptions import NoAPIKeyError
-
-
-# Load the ground truth data for the `rest` test category
-@lru_cache(maxsize=1)  # cache the result, effectively loading data once
-def load_eval_ground_truth():
-    with open(REST_EVAL_GROUND_TRUTH_PATH, "r") as f:
-        return f.readlines()
+from bfcl.schemas.responses import (
+    BaseResponse,
+    ExecutionError,
+    ExecutionResultCountMismatchError,
+    ExecutionResultKeyMismatchError,
+    ExecutionResultTypeError,
+    ExecutionStatusError,
+)
 
 
 #### Main function ####
-def executable_checker_rest(func_call, idx):
-    EVAL_GROUND_TRUTH = load_eval_ground_truth()
-
+def executable_checker_rest(func_call: str, ground_truth: dict | List[dict]):
     if "https://geocode.maps.co" in func_call:
         time.sleep(2)
     if "requests_get" in func_call:
@@ -31,81 +29,134 @@ def executable_checker_rest(func_call, idx):
     try:
         response = eval(func_call)
     except Exception as e:
-        return {
-            "valid": False,
-            "error": [f"Execution failed. {str(e)}"],
-            "error_type": "executable_checker_rest:execution_error",
-        }
+        return BaseResponse(
+            valid=False,
+            correct=False,
+            results=[response],
+            errors=[ExecutionError(message=[f"Execution failed. {str(e)}"])],
+        )
 
     try:
         if response.status_code == 200:
-            eval_GT_json = json.loads(EVAL_GROUND_TRUTH[idx])
+            eval_GT_json = ground_truth
             try:
                 if isinstance(eval_GT_json, dict):
                     if isinstance(response.json(), dict):
                         if set(eval_GT_json.keys()) == set(response.json().keys()):
-                            return {"valid": True, "error": [], "error_type": ""}
-                        return {
-                            "valid": False,
-                            "error": ["Key inconsistency"],
-                            "error_type": "executable_checker_rest:wrong_key",
-                        }
-                    return {
-                        "valid": False,
-                        "error": [f"Expected dictionary, but got {type(response.json())}"],
-                        "error_type": "executable_checker_rest:wrong_type",
-                    }
-
+                            return BaseResponse(valid=True, correct=True, results=[response.json()], errors=[])
+                        return BaseResponse(
+                            valid=False,
+                            correct=False,
+                            results=[response.json()],
+                            errors=[
+                                ExecutionResultKeyMismatchError(
+                                    message=[
+                                        (
+                                            f"Key inconsistency between expected ({set(eval_GT_json.keys())}) and "
+                                            f"actual ({set(response.json().keys())})"
+                                        )
+                                    ]
+                                )
+                            ],
+                        )
+                    return BaseResponse(
+                        valid=False,
+                        correct=False,
+                        results=[response.json()],
+                        errors=[
+                            ExecutionResultTypeError(message=[f"Expected dictionary, but got {type(response.json())}"])
+                        ],
+                    )
                 elif isinstance(eval_GT_json, list):
                     if isinstance(response.json(), list):
                         if len(eval_GT_json) != len(response.json()):
-                            return {
-                                "valid": False,
-                                "error": [f"Response list length inconsistency."],
-                                "error_type": "value_error:exec_result_rest_count",
-                            }
+                            return BaseResponse(
+                                valid=False,
+                                correct=False,
+                                results=[response.json()],
+                                errors=[
+                                    ExecutionResultCountMismatchError(
+                                        message=[
+                                            (
+                                                f"Response list length inconsistency between expected ({len(eval_GT_json)}) "
+                                                f"and actual ({len(response.json())})"
+                                            )
+                                        ]
+                                    )
+                                ],
+                            )
 
                         else:
                             for i in range(len(eval_GT_json)):
                                 if set(eval_GT_json[i].keys()) != set(response.json()[i].keys()):
-                                    return {
-                                        "valid": False,
-                                        "error": [f"Key inconsistency"],
-                                        "error_type": "executable_checker_rest:wrong_key",
-                                    }
+                                    return BaseResponse(
+                                        valid=False,
+                                        correct=False,
+                                        results=[response.json()],
+                                        errors=[
+                                            ExecutionResultKeyMismatchError(
+                                                message=[
+                                                    (
+                                                        f"Key inconsistency between expected ({set(eval_GT_json.keys())}) and "
+                                                        f"actual ({set(response.json().keys())})"
+                                                    )
+                                                ]
+                                            )
+                                        ],
+                                    )
 
-                            return {"valid": True, "error": []}
+                            return BaseResponse(valid=True, correct=True, results=[response.json()], errors=[])
                     else:
-                        return {
-                            "valid": False,
-                            "error": [f"Expected list, but got {type(response.json())}"],
-                            "error_type": "executable_checker_rest:wrong_type",
-                        }
-                return {
-                    "valid": False,
-                    "error": [f"Expected dict or list, but got {type(response.json())}"],
-                    "error_type": "executable_checker_rest:wrong_type",
-                }
-            except Exception as e:
-                return {
-                    "valid": False,
-                    "error": [
-                        f"Error in execution and type checking. Status code: {response.status_code}. Error: {str(e)}"
+                        return BaseResponse(
+                            valid=False,
+                            correct=False,
+                            results=[response.json()],
+                            errors=[
+                                ExecutionResultTypeError(message=[f"Expected list, but got {type(response.json())}"])
+                            ],
+                        )
+                return BaseResponse(
+                    valid=False,
+                    correct=False,
+                    results=[response.json()],
+                    errors=[
+                        ExecutionResultTypeError(
+                            message=[f"Expected dictionary or list, but got {type(response.json())}"]
+                        )
                     ],
-                    "error_type": "executable_checker_rest:response_format_error",
-                }
+                )
+            except Exception as e:
+                return BaseResponse(
+                    valid=False,
+                    correct=False,
+                    results=[response],
+                    errors=[
+                        ExecutionStatusError(
+                            message=[
+                                f"Error in execution and type checking. Status code: {response.status_code}. "
+                                f"Error: {str(e)}"
+                            ]
+                        )
+                    ],
+                )
         else:
-            return {
-                "valid": False,
-                "error": [f"Execution result status code is not 200, got {response.status_code}"],
-                "error_type": "executable_checker_rest:wrong_status_code",
-            }
+            return BaseResponse(
+                valid=False,
+                correct=False,
+                results=[response],
+                errors=[
+                    ExecutionStatusError(
+                        message=[f"Execution result status code is not 200, got {response.status_code}"]
+                    )
+                ],
+            )
     except Exception as e:
-        return {
-            "valid": False,
-            "error": [f"Cannot get status code of the response. Error: {str(e)}"],
-            "error_type": "executable_checker_rest:cannot_get_status_code",
-        }
+        return BaseResponse(
+            valid=False,
+            correct=False,
+            results=[response],
+            errors=[ExecutionStatusError(message=[f"Cannot get status code of the response. Error: {str(e)}"])],
+        )
 
 
 def executable_checker_non_rest(decoded_result: list, func_description: dict, test_category: str):

@@ -42,7 +42,7 @@ EXECTUABLE_API_GROUND_TRUTH_FILE_PATH = (
 )
 
 # This is the ground truth file for the `rest` test category
-REST_EVAL_GROUND_TRUTH_PATH = f"{PROJECT_ROOT}/bfcl/eval/exec/data/rest-eval-response_v5.jsonl"
+REST_EVAL_GROUND_TRUTH_PATH = (BFCL_SRC_ROOT / "data" / "possible_answer" / "rest_eval_response.jsonl").resolve()
 REST_API_GROUND_TRUTH_FILE_PATH = (PROJECT_ROOT / REST_API_GROUND_TRUTH_FILE_PATH).resolve()
 EXECTUABLE_API_GROUND_TRUTH_FILE_PATH = (PROJECT_ROOT / EXECTUABLE_API_GROUND_TRUTH_FILE_PATH).resolve()
 REST_EVAL_GROUND_TRUTH_PATH = (PROJECT_ROOT / REST_EVAL_GROUND_TRUTH_PATH).resolve()
