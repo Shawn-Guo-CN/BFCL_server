@@ -44,8 +44,8 @@ class BaseRunner(ABC):
             # TestCategory.EXEC_MULTIPLE: self.run_executable_calls,
             # TestCategory.EXEC_PARALLEL_MULTIPLE: self.run_executable_calls,
             # non-python
-            # TestCategory.JAVA: self.run_ast_calls,
-            # TestCategory.JAVASCRIPT: self.run_ast_calls,
+            TestCategory.JAVA: self.run_ast_calls,
+            TestCategory.JAVASCRIPT: self.run_ast_calls,
             # TestCategory.REST: self.run_executable_calls,
         }
 
@@ -151,10 +151,7 @@ class BaseRunner(ABC):
             tool_call (List[Dict[str, Any]]): The tool calls to execute.
 
         Returns:
-            A dictionary with the following keys
-                - valid (bool): True if the tool call was valid, False otherwise.
-                - correct (bool, optional): True if the tool call was correct, False otherwise
-                - result (list, optional): List of results from each call.
+            A `BaseResponse` object
 
         TODO: check the correctness of the results
         """
@@ -205,7 +202,7 @@ class BaseRunner(ABC):
 
         return checker_result
 
-    def run(self, id: str, completion: str) -> Dict[str, Any]:
+    def run(self, id: str, completion: str) -> BaseResponse:
         """Run the tool call provided.
 
         Args:
@@ -213,10 +210,7 @@ class BaseRunner(ABC):
             completion (str): The completion to run the tool call for.
 
         Returns:
-            A dictionary with the following keys
-                - valid (bool): True if the tool call was valid, False otherwise.
-                - correct (bool, optional): True if the tool call was correct, False otherwise
-                - result (list, optional): List of results from each call.
+            A `BaseResponse` object
         """
         response = BaseResponse()
 

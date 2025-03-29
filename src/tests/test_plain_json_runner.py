@@ -279,3 +279,101 @@ class TestPlainJsonRunner:
         assert result.get("correct") is False and result.get("errors")[0].get("error_type").endswith(
             "cannot_find_match"
         )
+
+    def test_positive_java(self, runner):
+        """Test the positive java sample."""
+        sample = {
+            "id": "java_2",
+            "completion": '[{"FireBirdUtils.getViewSourceWithHeader": {"monitor": "dbMonitor", "view": "EmployeeView", "source": "SELECT * FROM Employee WHERE status = \'active\'"}}]',
+        }
+        result = runner.run(**sample)
+        assert result.get("correct") is True
+
+    def test_negative_java_wrong_function_name(self, runner):
+        """Test the negative java sample with wrong function name."""
+        sample = {
+            "id": "java_2",
+            "completion": (
+                '[{"FireBirdUtils.WrongFunctionName": {"monitor": "dbMonitor", "view": "EmployeeView", "source": '
+                "\"SELECT * FROM Employee WHERE status = 'active'\"}}]"
+            ),
+        }
+        result = runner.run(**sample)
+        assert result.get("correct") is False
+
+    def test_negative_java_missing_required_parameter(self, runner):
+        """Test the negative java sample with missing required parameter."""
+        sample = {
+            "id": "java_2",
+            "completion": (
+                '[{"FireBirdUtils.getViewSourceWithHeader": {"monitor": "dbMonitor", "view": "EmployeeView"}}]'
+            ),
+        }
+        result = runner.run(**sample)
+        assert result.get("correct") is False and result.get("errors")[0].get("error_type").endswith("missing_required")
+
+    def test_negative_java_wrong_value(self, runner):
+        """Test the negative java sample with wrong value."""
+        sample = {
+            "id": "java_2",
+            "completion": (
+                '[{"FireBirdUtils.getViewSourceWithHeader": {"monitor": "wrongMonitor", "view": "EmployeeView", '
+                '"source": "SELECT * FROM Employee WHERE status = \'active\'"}}]'
+            ),
+        }
+        result = runner.run(**sample)
+        assert result.get("correct") is False and result.get("errors")[0].get("error_type").startswith("value_error")
+
+    def test_negative_java_unexpected_parameter(self, runner):
+        """Test the negative java sample with unexpected parameter."""
+        sample = {
+            "id": "java_2",
+            "completion": (
+                '[{"FireBirdUtils.getViewSourceWithHeader": {"monitor": "dbMonitor", "view": "EmployeeView", "source": '
+                '"SELECT * FROM Employee WHERE status = \'active\'", "unexpected_param": "unexpected_value"}}]'
+            ),
+        }
+        result = runner.run(**sample)
+        assert result.get("correct") is False and result.get("errors")[0].get("error_type").endswith("unexpected_param")
+
+    def test_positive_javascript(self, runner):
+        """Test the positive javascript sample."""
+        sample = {
+            "id": "javascript_11",
+            "completion": (
+                '[{"prioritizeAndSort": {"items": "myItemList", "priorityStatus": "urgent", "ascending": "true"}}]'
+            ),
+        }
+        result = runner.run(**sample)
+        assert result.get("correct") is True
+
+    def test_negative_javascript_wrong_function_name(self, runner):
+        """Test the negative javascript sample with wrong function name."""
+        sample = {
+            "id": "javascript_11",
+            "completion": (
+                '[{"WrongFunctionName": {"items": "myItemList", "priorityStatus": "urgent", "ascending": "true"}}]'
+            ),
+        }
+        result = runner.run(**sample)
+        assert result.get("correct") is False
+
+    def test_negative_javascript_missing_required_parameter(self, runner):
+        """Test the negative javascript sample with missing required parameter."""
+        sample = {
+            "id": "javascript_11",
+            "completion": '[{"prioritizeAndSort": {"items": "myItemList", "priorityStatus": "urgent"}}]',
+        }
+        result = runner.run(**sample)
+        assert result.get("correct") is False and result.get("errors")[0].get("error_type").endswith("missing_required")
+
+    def test_negative_javascript_wrong_value(self, runner):
+        """Test the negative javascript sample with wrong value."""
+        sample = {
+            "id": "javascript_11",
+            "completion": (
+                '[{"prioritizeAndSort": {"items": "myItemList", "priorityStatus": "urgent", "ascending": "false"}}]'
+            ),
+        }
+        result = runner.run(**sample)
+        assert result.get("correct") is False and result.get("errors")[0].get("error_type").startswith("value_error")
