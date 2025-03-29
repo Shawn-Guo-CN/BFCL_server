@@ -32,17 +32,16 @@ def executable_checker_rest(func_call: str, ground_truth: dict | List[dict]):
         return BaseResponse(
             valid=False,
             correct=False,
-            results=[response],
+            results=[],
             errors=[ExecutionError(message=[f"Execution failed. {str(e)}"])],
         )
 
     try:
         if response.status_code == 200:
-            eval_GT_json = ground_truth
             try:
-                if isinstance(eval_GT_json, dict):
+                if isinstance(ground_truth, dict):
                     if isinstance(response.json(), dict):
-                        if set(eval_GT_json.keys()) == set(response.json().keys()):
+                        if set(ground_truth.keys()) == set(response.json().keys()):
                             return BaseResponse(valid=True, correct=True, results=[response.json()], errors=[])
                         return BaseResponse(
                             valid=False,
@@ -52,7 +51,7 @@ def executable_checker_rest(func_call: str, ground_truth: dict | List[dict]):
                                 ExecutionResultKeyMismatchError(
                                     message=[
                                         (
-                                            f"Key inconsistency between expected ({set(eval_GT_json.keys())}) and "
+                                            f"Key inconsistency between expected ({set(ground_truth.keys())}) and "
                                             f"actual ({set(response.json().keys())})"
                                         )
                                     ]
@@ -67,9 +66,9 @@ def executable_checker_rest(func_call: str, ground_truth: dict | List[dict]):
                             ExecutionResultTypeError(message=[f"Expected dictionary, but got {type(response.json())}"])
                         ],
                     )
-                elif isinstance(eval_GT_json, list):
+                elif isinstance(ground_truth, list):
                     if isinstance(response.json(), list):
-                        if len(eval_GT_json) != len(response.json()):
+                        if len(ground_truth) != len(response.json()):
                             return BaseResponse(
                                 valid=False,
                                 correct=False,
@@ -78,8 +77,8 @@ def executable_checker_rest(func_call: str, ground_truth: dict | List[dict]):
                                     ExecutionResultCountMismatchError(
                                         message=[
                                             (
-                                                f"Response list length inconsistency between expected ({len(eval_GT_json)}) "
-                                                f"and actual ({len(response.json())})"
+                                                f"Response list length inconsistency between expected "
+                                                f"({len(ground_truth)}) and actual ({len(response.json())})"
                                             )
                                         ]
                                     )
@@ -87,8 +86,8 @@ def executable_checker_rest(func_call: str, ground_truth: dict | List[dict]):
                             )
 
                         else:
-                            for i in range(len(eval_GT_json)):
-                                if set(eval_GT_json[i].keys()) != set(response.json()[i].keys()):
+                            for i in range(len(ground_truth)):
+                                if set(ground_truth[i].keys()) != set(response.json()[i].keys()):
                                     return BaseResponse(
                                         valid=False,
                                         correct=False,
@@ -97,8 +96,9 @@ def executable_checker_rest(func_call: str, ground_truth: dict | List[dict]):
                                             ExecutionResultKeyMismatchError(
                                                 message=[
                                                     (
-                                                        f"Key inconsistency between expected ({set(eval_GT_json.keys())}) and "
-                                                        f"actual ({set(response.json().keys())})"
+                                                        f"Key inconsistency between expected "
+                                                        f"({set(ground_truth[i].keys())}) and "
+                                                        f"actual ({set(response.json()[i].keys())})"
                                                     )
                                                 ]
                                             )
