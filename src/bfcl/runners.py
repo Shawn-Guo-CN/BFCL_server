@@ -73,13 +73,11 @@ class BaseRunner(ABC):
         """
         raise NotImplementedError
 
-    def run_relevance_calls(
-        self, id: str, tool_calls: List[Dict[str, Any]] | None, category: TestCategory
-    ) -> BaseResponse:
+    def run_relevance_calls(self, id: str, tool_calls: ToolCallList | None, category: TestCategory) -> BaseResponse:
         """Run the tool call for the relevance category.
 
         Args:
-            tool_call (List[Dict[str, Any]]): The tool calls to execute.
+            tool_call (ToolCallList): The tool calls to execute.
 
         Returns:
             A `BaseResponse` object
@@ -95,18 +93,22 @@ class BaseRunner(ABC):
         return response
 
     def run_irrelevance_calls(
-        self, id: str, tool_calls: List[Dict[str, Any]] | None, category: TestCategory
+        self, id: str, tool_calls: ToolCallList | str | None, category: TestCategory
     ) -> BaseResponse:
         """Run the tool call for the irrelevance category.
 
         Args:
-            tool_call (List[Dict[str, Any]]): The tool calls to execute.
+            tool_call (ToolCallList | str | None): The tool calls to execute.
 
         Returns:
             A `BaseResponse` object
         """
         _, __ = id, category
         response = BaseResponse()
+        try:
+            tool_calls = ToolCallList.from_json_dict_list(json.loads(tool_calls))
+        except:
+            pass
         response.valid = tool_calls is None or not isinstance(tool_calls, ToolCallList)
         response.correct = response.valid
         return response

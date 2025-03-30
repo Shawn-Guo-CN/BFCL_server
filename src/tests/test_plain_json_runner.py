@@ -383,3 +383,48 @@ class TestPlainJsonRunner:
         }
         result = runner.run(**sample)
         assert result.get("correct") is False and result.get("errors")[0].get("error_type").startswith("value_error")
+
+    def test_positive_rest(self, runner):
+        """Test the positive REST sample."""
+        sample = {
+            "id": "rest_49",
+            "completion": (
+                'requests.get("https://api.open-meteo.com/v1/forecast", '
+                'params={"latitude": "39.113014", "longitude": "-105.358887", '
+                '"daily": "temperature_2m_max,temperature_2m_min,wind_speed_10m_max,precipitation_sum",'
+                '"temperature_unit": "fahrenheit", "wind_speed_unit": "mph", "forecast_days": 10, "timezone": "auto"})'
+            ),
+        }
+        result = runner.run(**sample)
+        assert result.get("correct") is True
+
+    def test_negative_rest_execution_failure(self, runner):
+        """Test the negative REST sample with execution failure."""
+        sample = {
+            "id": "rest_49",
+            "completion": (
+                'requests.get.("https://api.open-meteo.com/v1/forecast",'
+                'params={"latitude": "39.113014", "longitude": "-105.358887", '
+                'daily": "temperature_2m_max,precipitation_sum", "temperature_unit": "fahrenheit", '
+                'wind_speed_unit": "mph", "forecast_days": 10, "timezone": "auto"})'
+            ),
+        }
+        result = runner.run(**sample)
+        assert result.get("correct") is False and result.get("errors")[0].get("error_type").endswith("execution_error")
+
+    def test_negative_rest_status_code_error(self, runner):
+        """Test the negative REST sample with status code error."""
+        sample = {
+            "id": "rest_49",
+            "completion": (
+                'requests.get("https://api.open-meteo.com/v1/forecast", '
+                'params={"latitude": "39.113014", '
+                '"daily": "temperature_2m_max,temperature_2m_min,wind_speed_10m_max,precipitation_sum",'
+                '"temperature_unit": "fahrenheit", "wind_speed_unit": "mph", '
+                '"forecast_days": 10, "timezone": "auto"})'
+            ),
+        }
+        result = runner.run(**sample)
+        assert result.get("correct") is False and result.get("errors")[0].get("error_type").endswith(
+            "wrong_status_code"
+        )
