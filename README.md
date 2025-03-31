@@ -43,12 +43,12 @@ An example of running a tool call is as follows:
 ```bash
 import requests
 
-test_call = {
+ast_simple_example = {
     "id": "simple_2",
     "completion": '[{"math.hypot": {"x": 4, "y": 5, "z": 0}}]'
 }
 
-response = requests.get("http://127.0.0.1:1123/run", json=test_call)
+response = requests.get("http://127.0.0.1:1123/run", json=ast_simple_example)
 print('response:', response.json())
 print('formatted:', response.json()['formatted'])
 print('valid:', response.json()['valid'])
@@ -75,5 +75,6 @@ We hereby describe the high-level architecture of the project. The main modules 
 - [x] Runner for the `AST` category.
 - [x] Runner for the `Executable` category.
 - [ ] Add more examples for function calls in plain json.
+- [ ] Parallelise the tool-call runners.
 - [ ] Support for installing as a dependency.
 - [ ] Runner for the `Multi-Turn` category.
