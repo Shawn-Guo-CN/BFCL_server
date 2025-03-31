@@ -428,3 +428,21 @@ class TestPlainJsonRunner:
         assert result.get("correct") is False and result.get("errors")[0].get("error_type").endswith(
             "wrong_status_code"
         )
+
+    def test_positive_exec_simple_exact_match(self, runner):
+        """Test the positive exec simple sample with exact match."""
+        sample = {"id": "exec_simple_1", "completion": "calc_binomial_probability(n=30, k=15, p=0.5)"}
+        result = runner.run(**sample)
+        assert result.get("correct") is True
+
+    def test_positive_exec_simple_structural_match(self, runner):
+        """Test the positive exec simple sample with structural match."""
+        sample = {"id": "exec_simple_58", "completion": "get_weather_data(coordinates=[90.00, 0.00])"}
+        result = runner.run(**sample)
+        assert result.get("correct") is True
+
+    def test_positive_exec_simple_real_time_match(self, runner):
+        """Test the positive exec simple sample with real_time_match."""
+        sample = {"id": "exec_simple_54", "completion": "get_stock_price_by_stock_name(stock_name='AAPL')"}
+        result = runner.run(**sample)
+        assert result.get("correct") is True

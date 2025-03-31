@@ -12,27 +12,32 @@ class BaseError(BaseModel):
 
 class ExecutionError(BaseError):
     message: List[str] = ["Execution failed."]
-    error_type: str = "executable_checker_rest:execution_error"
+    error_type: str = "executable_checker:execution_error"
 
 
 class ExecutionResultCountMismatchError(BaseError):
     message: List[str] = ["Response list length inconsistency."]
-    error_type: str = "executable_checker_rest:wrong_count"
+    error_type: str = "executable_checker:wrong_count"
 
 
 class ExecutionResultKeyMismatchError(BaseError):
     message: List[str] = ["Key inconsistency."]
-    error_type: str = "executable_checker_rest:wrong_key"
+    error_type: str = "executable_checker:wrong_key"
+
+
+class ExecutionResultMismatchError(BaseError):
+    message: List[str] = ["Result mismatch."]
+    error_type: str = "executable_checker:wrong_result"
 
 
 class ExecutionResultTypeError(BaseError):
     message: List[str] = ["Result type inconsistency."]
-    error_type: str = "executable_checker_rest:wrong_type"
+    error_type: str = "executable_checker:wrong_type"
 
 
 class ExecutionStatusError(BaseError):
     message: List[str] = ["Execution result status code is not 200."]
-    error_type: str = "executable_checker_rest:wrong_status_code"
+    error_type: str = "executable_checker:wrong_status_code"
 
 
 class FunctionMismatchError(BaseError):

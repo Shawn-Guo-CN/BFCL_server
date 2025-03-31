@@ -133,7 +133,8 @@ class BaseRunner(ABC):
             response = executable_checker_rest(tool_calls, ground_truth)
         else:
             func_description = self.id_mapper.get_function_description(id)
-            response = executable_checker_non_rest(tool_calls, func_description, category.value[1])
+            ground_truth = self.id_mapper.get_ground_truth(id)
+            response = executable_checker_non_rest(tool_calls, ground_truth, func_description, category.value[1])
 
         return response
 

@@ -8,11 +8,12 @@ from bfcl.schemas.exceptions import NoAPIKeyError
 
 # Make sure the env variables are populated
 ENV_VARS = ("GEOCODE_API_KEY", "RAPID_API_KEY", "OMDB_API_KEY", "EXCHANGERATE_API_KEY")
+ENV_VARS = ["RAPID_API_KEY"]
+# TODO: update api key storage
 api_key = {}
 for var in ENV_VARS:
     if os.getenv(var) == "":
         raise NoAPIKeyError()
-
     api_key[var.replace("_", "-")] = os.getenv(var)
 
 

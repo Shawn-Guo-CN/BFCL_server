@@ -30,12 +30,12 @@ class IDMapper:
                         self.id_to_language[data["id"]] = "python"
                     else:
                         self.id_to_language[data["id"]] = category.value[1]
-            if category.value[3]:
+            if category.value[3] and not category in TestCollection.EXECUTABLE.value[2]:
                 with open(Path(POSSIBLE_ANSWER_PATH) / category.value[2], "r") as f:
                     for line in f:
                         data = json.loads(line.strip())
                         self.id_to_ground_truth[data["id"]] = ToolCallList.from_ground_truth(data["ground_truth"])
-            if category in TestCollection.AST.value[2]:
+            if category in TestCollection.AST + TestCollection.EXECUTABLE:
                 with open(Path(PROMPT_PATH) / category.value[2], "r") as f:
                     for line in f:
                         data = json.loads(line.strip())
@@ -46,6 +46,14 @@ class IDMapper:
                 for idx, data in enumerate(eval_ground_truth):
                     # ground truth for the rest category is a dict or a list of dicts
                     self.id_to_ground_truth[f"rest_{idx}"] = eval_ground_truth[idx]
+            if category.value[3] and category in TestCollection.EXECUTABLE.value[2]:
+                with open(Path(PROMPT_PATH) / category.value[2], "r") as f:
+                    for line in f:
+                        data = json.loads(line.strip())
+                        self.id_to_ground_truth[data["id"]] = data["ground_truth"]
+                        self.id_to_function_description[data["id"]][0]["execution_result_type"] = data[
+                            "execution_result_type"
+                        ]
 
     def get_category(self, id: str) -> TestCategory:
         """Get the category of the given ID."""

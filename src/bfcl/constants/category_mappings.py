@@ -205,10 +205,10 @@ class TestCategory(Enum):
     PARALLEL_MULTIPLE = (10, "parallel_multiple", f"{VERSION_PREFIX}_parallel_multiple.json", True)
     LIVE_PARALLEL_MULTIPLE = (11, "live_parallel_multiple", f"{VERSION_PREFIX}_live_parallel_multiple.json", True)
     # executable
-    EXEC_SIMPLE = (12, "exec_simple", f"{VERSION_PREFIX}_exec_simple.json", False)
-    EXEC_PARALLEL = (13, "exec_parallel", f"{VERSION_PREFIX}_exec_parallel.json", False)
-    EXEC_MULTIPLE = (14, "exec_multiple", f"{VERSION_PREFIX}_exec_multiple.json", False)
-    EXEC_PARALLEL_MULTIPLE = (15, "exec_parallel_multiple", f"{VERSION_PREFIX}_exec_parallel_multiple.json", False)
+    EXEC_SIMPLE = (12, "exec_simple", f"{VERSION_PREFIX}_exec_simple.json", True)
+    EXEC_PARALLEL = (13, "exec_parallel", f"{VERSION_PREFIX}_exec_parallel.json", True)
+    EXEC_MULTIPLE = (14, "exec_multiple", f"{VERSION_PREFIX}_exec_multiple.json", True)
+    EXEC_PARALLEL_MULTIPLE = (15, "exec_parallel_multiple", f"{VERSION_PREFIX}_exec_parallel_multiple.json", True)
     # non-python
     JAVA = (16, "java", f"{VERSION_PREFIX}_java.json", True)
     JAVASCRIPT = (17, "javascript", f"{VERSION_PREFIX}_javascript.json", True)
