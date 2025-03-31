@@ -73,6 +73,7 @@ We hereby describe the high-level architecture of the project. The main modules 
 ## Features to be added
 
 - [x] Runner for the `AST` category.
-- [ ] Runner for the `Executable` category.
+- [x] Runner for the `Executable` category.
+- [ ] Add more examples for function calls in plain json.
 - [ ] Support for installing as a dependency.
 - [ ] Runner for the `Multi-Turn` category.

@@ -389,10 +389,11 @@ class TestPlainJsonRunner:
         sample = {
             "id": "rest_49",
             "completion": (
-                'requests.get("https://api.open-meteo.com/v1/forecast", '
-                'params={"latitude": "39.113014", "longitude": "-105.358887", '
-                '"daily": "temperature_2m_max,temperature_2m_min,wind_speed_10m_max,precipitation_sum",'
-                '"temperature_unit": "fahrenheit", "wind_speed_unit": "mph", "forecast_days": 10, "timezone": "auto"})'
+                "[\"requests.get('https://api.open-meteo.com/v1/forecast', "
+                "params={'latitude': '39.113014', 'longitude': '-105.358887', "
+                "'daily': 'temperature_2m_max,temperature_2m_min,wind_speed_10m_max,precipitation_sum',"
+                "'temperature_unit': 'fahrenheit', 'wind_speed_unit': 'mph', 'forecast_days': 10, "
+                "'timezone': 'auto'})\"]"
             ),
         }
         result = runner.run(**sample)
@@ -403,10 +404,10 @@ class TestPlainJsonRunner:
         sample = {
             "id": "rest_49",
             "completion": (
-                'requests.get.("https://api.open-meteo.com/v1/forecast",'
-                'params={"latitude": "39.113014", "longitude": "-105.358887", '
-                'daily": "temperature_2m_max,precipitation_sum", "temperature_unit": "fahrenheit", '
-                'wind_speed_unit": "mph", "forecast_days": 10, "timezone": "auto"})'
+                "[\"requests.get.('https://api.open-meteo.com/v1/forecast',"
+                "params={'latitude': '39.113014', 'longitude': '-105.358887', "
+                "'daily': 'temperature_2m_max,precipitation_sum', 'temperature_unit': 'fahrenheit', "
+                "'wind_speed_unit': 'mph', 'forecast_days': 10, 'timezone': 'auto'})\"]"
             ),
         }
         result = runner.run(**sample)
@@ -417,11 +418,11 @@ class TestPlainJsonRunner:
         sample = {
             "id": "rest_49",
             "completion": (
-                'requests.get("https://api.open-meteo.com/v1/forecast", '
-                'params={"latitude": "39.113014", '
-                '"daily": "temperature_2m_max,temperature_2m_min,wind_speed_10m_max,precipitation_sum",'
-                '"temperature_unit": "fahrenheit", "wind_speed_unit": "mph", '
-                '"forecast_days": 10, "timezone": "auto"})'
+                "[\"requests.get('https://api.open-meteo.com/v1/forecast', "
+                "params={'latitude': '39.113014', "
+                "'daily': 'temperature_2m_max,temperature_2m_min,wind_speed_10m_max,precipitation_sum',"
+                "'temperature_unit': 'fahrenheit', 'wind_speed_unit': 'mph', "
+                "'forecast_days': 10, 'timezone': 'auto'})\"]"
             ),
         }
         result = runner.run(**sample)
@@ -431,18 +432,24 @@ class TestPlainJsonRunner:
 
     def test_positive_exec_simple_exact_match(self, runner):
         """Test the positive exec simple sample with exact match."""
-        sample = {"id": "exec_simple_1", "completion": "calc_binomial_probability(n=30, k=15, p=0.5)"}
+        sample = {"id": "exec_simple_1", "completion": '["calc_binomial_probability(n=30, k=15, p=0.5)"]'}
         result = runner.run(**sample)
         assert result.get("correct") is True
 
     def test_positive_exec_simple_structural_match(self, runner):
         """Test the positive exec simple sample with structural match."""
-        sample = {"id": "exec_simple_58", "completion": "get_weather_data(coordinates=[90.00, 0.00])"}
+        sample = {"id": "exec_simple_58", "completion": '["get_weather_data(coordinates=[90.00, 0.00])"]'}
         result = runner.run(**sample)
         assert result.get("correct") is True
 
     def test_positive_exec_simple_real_time_match(self, runner):
         """Test the positive exec simple sample with real_time_match."""
-        sample = {"id": "exec_simple_54", "completion": "get_stock_price_by_stock_name(stock_name='AAPL')"}
+        sample = {"id": "exec_simple_54", "completion": "[\"get_stock_price_by_stock_name(stock_name='AAPL')\"]"}
+        result = runner.run(**sample)
+        assert result.get("correct") is True
+
+    def test_positive_exec_multiple(self, runner):
+        """Test the positive exec multiple sample."""
+        sample = {"id": "exec_multiple_2", "completion": '["calculate_density(mass=50, volume=10)"]'}
         result = runner.run(**sample)
         assert result.get("correct") is True

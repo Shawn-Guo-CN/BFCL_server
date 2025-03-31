@@ -113,7 +113,7 @@ class BaseRunner(ABC):
         response.correct = response.valid
         return response
 
-    def run_executable_calls(self, id: str, tool_calls: str | None, category: TestCategory) -> BaseResponse:
+    def run_executable_calls(self, id: str, tool_calls: str | None | List[str], category: TestCategory) -> BaseResponse:
         """Run the tool call for the executable category.
 
         Args:
@@ -130,7 +130,7 @@ class BaseRunner(ABC):
         ground_truth = self.id_mapper.get_ground_truth(id)
 
         if category == TestCategory.REST:
-            response = executable_checker_rest(tool_calls, ground_truth)
+            response = executable_checker_rest(tool_calls[0], ground_truth)
         else:
             func_description = self.id_mapper.get_function_description(id)
             ground_truth = self.id_mapper.get_ground_truth(id)
@@ -249,8 +249,14 @@ class PlainJsonRunner(BaseRunner):
         Returns:
             A list of tool calls or None if the completion cannot be decoded.
         """
-        if category in TestCollection.IRRELEVANCE + TestCollection.EXECUTABLE:
+        if category in TestCollection.IRRELEVANCE:
             return completion  # for rest category, the completion is an eval() python code
+        elif category in TestCollection.EXECUTABLE:
+            try:
+                tool_calls = json.loads(completion)
+                return tool_calls
+            except:
+                return None
         else:
             try:
                 json_dict = json.loads(completion)

@@ -167,6 +167,7 @@ def executable_checker_non_rest(
     test_category: str,
 ) -> BaseResponse:
     if "multiple" in test_category or "parallel" in test_category:
+        assert isinstance(tool_calls, list), "Tool calls must be a list for `multiple` and `parallel` categories."
         return executable_checker_parallel_no_order(
             tool_calls,
             ground_truth,
@@ -184,13 +185,9 @@ def executable_checker_non_rest(
                     )
                 ],
             )
-        elif isinstance(tool_calls, list):
-            tool_call = tool_calls[0]
-        else:
-            tool_call = tool_calls
 
         return executable_checker_simple(
-            tool_call,
+            tool_calls[0],
             ground_truth[0],
             func_description[0]["execution_result_type"][0],
             False,

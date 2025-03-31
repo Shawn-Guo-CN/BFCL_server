@@ -278,7 +278,13 @@ class TestCollection(Enum):
         ],
     )
     IRRELEVANCE = (9, "irrelevance", [TestCategory.IRRELEVANCE, TestCategory.LIVE_IRRELEVANCE])
+
     # fmt: on
+    def __contains__(self, item):
+        """Check if a TestCategory is in this collection."""
+        if isinstance(item, TestCategory):
+            return item in self.value[2]
+        return False
 
     def __add__(self, other):
         if isinstance(other, TestCollection):
