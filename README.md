@@ -1,5 +1,6 @@
-# BFCL_server
-Serverised Berkeley Function Calling Leaderboard
+# BFCL Server
+
+Serverised [Berkeley Function Calling Leaderboard](https://github.com/ShishirPatil/gorilla/tree/main/berkeley-function-call-leaderboard)
 
 
 ## Installation
@@ -9,7 +10,7 @@ Serverised Berkeley Function Calling Leaderboard
 - `Python 3.10+`
 - `uv` is installed for dependency management, check [here](https://docs.astral.sh/uv/getting-started/installation/) for an installation guide.
 
-### Installation for serving-only
+### Install for serving-only
 
 ```bash
 git clone git@github.com:Shawn-Guo-CN/BFCL_server.git
@@ -17,8 +18,7 @@ cd BFCL_server
 uv sync
 ```
 
-
-### Installation for development
+### Install for development
 
 ```bash
 git clone git@github.com:Shawn-Guo-CN/BFCL_server.git
@@ -29,7 +29,7 @@ uv sync --extra "dev"
 pre-commit install --hook-type pre-commit --hook-type pre-push
 ```
 
-### Installation as a dependency
+### Install as a dependency
 
 ```bash
 uv install git+https://github.com/yourusername/BFCL_server.git@v0.1.0
@@ -165,10 +165,34 @@ print("concurrent responses:", [response['correct'] for response in responses.js
 We hereby describe the high-level architecture of the project. The main modules are:
 
 - `constants`: contains the constants for running the tool calls.
-- `data`: stores the original test prompts and possible answers from [Berkeley Function Calling Leaderboard](https://gorilla.cs.berkeley.edu/leaderboard.html).
+  - `category_mapping.py` defines the `Enum` classes for the categories and collections of tool calls.
+  - `config.py` defines the constant configuration for the project.
+  - `id_mapper.py` implements the `IDMapper` class, which is used to map the IDs of the tool calls to the 
+    corresponding categories, ground truth, programming languages, and function description.
+  - `type_mapping.py` defines the mapping for parsing the tool calls in different programming languages.
+
+- `data`: stores the original test prompts and possible answers from 
+  [Berkeley Function Calling Leaderboard](https://gorilla.cs.berkeley.edu/leaderboard.html).
+    - `possible_answers/` contains the possible answers for test prompts.
+
 - `eval`: implements the tool-call runners for each category, including `Irrelevance`, `Executable`, and etc.
+  - `ast/` implements the `checker()` functions for the `AST` category.
+  - `exec/` implements the `checker()` functions for the `Executable` category along with the executable python
+    functions used in the tests.
+  - `multi_turn/` is not yet implemented.
+
+- `schemas`: contains the schemas used across the project.
+  - `exceptions.py` defines the custom errors used in the project.
+  - `responses.py` defines the errors (`BaseResponse`) that may occur during the test and responses (`BaseResponse`)
+    that are returned from the `checker()` functions.
+  - `tool_calls.py` defines the schemas for the tool calls used in the project.
+
 - `utils`: contains the utility functions for running the tool calls.
-- `main.py`: the main entry of the server, which wraps the tool-call runners as `asgi` apps and parallelise them.
+  - `ops.py` implement commonly used operations across the project.
+
+- `main.py`: the main entry of the server, which wraps the tool-call runners as `asgi` apps and parallelises them.
+- `runners.py`: implements the tool-call runners for each category, including `Irrelevance`, `Executable`, 
+  `AST` and etc.
 
 
 ## Features to be added
