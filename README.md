@@ -1,6 +1,7 @@
 # BFCL_server
 Serverised Berkeley Function Calling Leaderboard
 
+
 ## Installation
 
 ### Prerequisites
@@ -27,6 +28,13 @@ uv sync --extra "dev"
 # Install pre-commit hooks
 pre-commit install --hook-type pre-commit --hook-type pre-push
 ```
+
+### Installation as a dependency
+
+```bash
+uv install git+https://github.com/yourusername/BFCL_server.git@v0.1.0
+```
+
 
 ## Quick Start
 
@@ -162,6 +170,7 @@ We hereby describe the high-level architecture of the project. The main modules 
 - `utils`: contains the utility functions for running the tool calls.
 - `main.py`: the main entry of the server, which wraps the tool-call runners as `asgi` apps and parallelise them.
 
+
 ## Features to be added
 
 - [x] Runner for the `AST` category.
@@ -169,6 +178,6 @@ We hereby describe the high-level architecture of the project. The main modules 
 - [x] Add more examples for function calls in plain json.
 - [x] Add example of Executable simple.
 - [x] Parallelise the tool-call runners.
-- [ ] Support for installing as a dependency.
+- [x] Support for installing as a dependency.
 - [ ] Add entry for constructing prompt set.
 - [ ] Runner for the `Multi-Turn` category.

@@ -2,10 +2,20 @@
 name = "bfcl_server"
 version = "0.1.0"
 description = "BFCL Server"
+license = "Apache-2.0"
 readme = "README.md"
 authors = [
-    { name = "Shangmin Guo", email = "shawnguo.cn@gmail.com" }
+    { name = "Shangmin Guo", email = "shawnguo.cn@gmail.com" },
+    { name = "Congjie He", email = "congjiehe95@gmail.com"}
 ]
+keywords = ["bfcl", "server"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License 2.0",
+    "Operating System :: OS Independent",
+]
+
 requires-python = ">=3.10"
 dependencies = [
     "tree_sitter==0.21.3",
