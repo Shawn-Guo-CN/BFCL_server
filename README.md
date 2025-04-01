@@ -33,8 +33,10 @@ pre-commit install --hook-type pre-commit --hook-type pre-push
 ### Start the server
 
 ```bash
-uv run bfcl --host 0.0.0.0 --port 1123
+uv run bfcl --host 0.0.0.0 --port 1123 --num_workers 8
 ```
+
+`num_workers` is the number of workers to run the server. You can adjust it according to your machine's CPU cores.
 
 ### Run a single tool call
 
