@@ -32,13 +32,7 @@ pre-commit install --hook-type pre-commit --hook-type pre-push
 ### Install as a dependency
 
 ```bash
-uv install git+https://github.com/yourusername/BFCL_server.git@v0.1.1
-```
-
-Alternatively, you can use the following command to install the server as a dependency in your project:
-
-```bash
-uv add git+https://github.com/yourusername/BFCL_server.git@v0.1.1
+uv install git+https://github.com/yourusername/BFCL_server.git@v0.2.0
 ```
 
 
@@ -162,7 +156,11 @@ concurrent_requests_example = [
 responses = requests.get("http://127.0.0.1:1123/calls", json=concurrent_requests_example)
 print("concurrent responses:", [response['correct'] for response in responses.json()])
 ```
-
+### Construct a prompt dataset from BFCL
+```
+# XXX YYY are one or more categories to process ('all', 'single_turn', 'live', 'non_live', 'executable', 'non_python', 'python', 'python_ast', 'irrelevance')
+uv run prompt_set --categories XXX YYY
+```
 
 ## Design
 
@@ -209,5 +207,5 @@ We hereby describe the high-level architecture of the project. The main modules 
 - [x] Add example of Executable simple.
 - [x] Parallelise the tool-call runners.
 - [x] Support for installing as a dependency.
-- [ ] Add entry for constructing prompt set.
+- [x] Add entry for constructing prompt set.
 - [ ] Runner for the `Multi-Turn` category.
