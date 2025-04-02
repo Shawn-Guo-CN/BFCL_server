@@ -1,9 +1,12 @@
 import argparse
 import json
+import logging
 from pathlib import Path
 from typing import Any, Dict, List
 
 from bfcl.constants.category_mappings import TestCollection
+
+logger = logging.getLogger(__name__)
 
 
 def build_prompt_dataset(categories: List[TestCollection]) -> List[Dict[str, Any]]:
@@ -43,11 +46,11 @@ def build_prompt_dataset(categories: List[TestCollection]) -> List[Dict[str, Any
                     prompt_dataset.append(prompt_sample)
 
         except FileNotFoundError:
-            print(f"Warning: File {file_path} not found. Skipping...")
+            logger.warning(f"Warning: File {file_path} not found. Skipping...")
         except json.JSONDecodeError:
-            print(f"Warning: Error parsing JSON in {file_path}. Skipping...")
+            logger.warning(f"Warning: Error parsing JSON in {file_path}. Skipping...")
         except (KeyError, IndexError) as e:
-            print(f"Warning: Error processing data in {file_path}: {e}. Skipping...")
+            logger.warning(f"Warning: Error processing data in {file_path}: {e}. Skipping...")
 
     return prompt_dataset
 
@@ -95,15 +98,15 @@ def main():
                 break
 
     if not categories:
-        print("Error: No valid categories specified.")
+        logger.error("Error: No valid categories specified.")
         return
 
     prompt_dataset = build_prompt_dataset(categories)
 
     save_prompt_dataset(prompt_dataset, args.output)
 
-    print(f"Successfully built prompt dataset with {len(prompt_dataset)} samples.")
-    print(f"Dataset saved to {args.output}")
+    logger.info(f"Successfully built prompt dataset with {len(prompt_dataset)} samples.")
+    logger.info(f"Dataset saved to {args.output}")
 
 
 if __name__ == "__main__":

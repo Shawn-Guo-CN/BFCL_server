@@ -32,7 +32,7 @@ pre-commit install --hook-type pre-commit --hook-type pre-push
 ### Install as a dependency
 
 ```bash
-uv install git+https://github.com/yourusername/BFCL_server.git@v0.1.0
+uv install git+https://github.com/yourusername/BFCL_server.git@v0.2.0
 ```
 
 
