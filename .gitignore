@@ -175,3 +175,7 @@ cython_debug/
 tmp*
 logs/*
 .vscode
+
+# Temporary files
+tmp/*
+prompt_dataset.json

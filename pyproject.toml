@@ -1,6 +1,6 @@
 [project]
 name = "bfcl_server"
-version = "0.1.0"
+version = "0.2.0"
 description = "BFCL Server"
 license = "Apache-2.0"
 readme = "README.md"
@@ -12,7 +12,7 @@ keywords = ["bfcl", "server"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: Apache Software License 2.0",
+    "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
 ]
 
@@ -31,6 +31,7 @@ dependencies = [
 
 [project.scripts]
 bfcl = "bfcl.main:main"
+prompt_set = "bfcl.prompt_set:main"
 
 [build-system]
 requires = ["hatchling"]
