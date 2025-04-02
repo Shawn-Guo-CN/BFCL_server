@@ -32,7 +32,13 @@ pre-commit install --hook-type pre-commit --hook-type pre-push
 ### Install as a dependency
 
 ```bash
-uv install git+https://github.com/yourusername/BFCL_server.git@v0.1.0
+uv install git+https://github.com/yourusername/BFCL_server.git@v0.1.1
+```
+
+Alternatively, you can use the following command to install the server as a dependency in your project:
+
+```bash
+uv add git+https://github.com/yourusername/BFCL_server.git@v0.1.1
 ```
 
 
